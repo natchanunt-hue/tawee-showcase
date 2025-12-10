@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Kanit } from "next/font/google";
 import { nineZeros, getIcon } from "../../../data/nineZeros";
 
-// ตั้งค่าฟอนต์
 const kanit = Kanit({
   subsets: ["thai", "latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -14,9 +13,8 @@ const kanit = Kanit({
 });
 
 export default function NineZerosPage() {
-  const bgColor = "bg-[#f0fdfa]"; // สีพื้นหลังอ่อนๆ คล้าย Infographic
+  const bgColor = "bg-[#f0fdfa]";
 
-  // Animation สำหรับการ์ด
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0 },
@@ -53,16 +51,19 @@ export default function NineZerosPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {nineZeros.map((item, index) => {
-            const Icon = getIcon(item.icon); // ดึง Icon Component มาใช้
+            const Icon = getIcon(item.icon);
             
-            // --- [FIXED] ส่วนที่แก้บั๊ก: เช็คค่าสีก่อนใช้งาน ---
-            // 1. ลองหา color หรือ activeColor หรือใช้ค่า default (bg-teal-500)
+            // --- [FIXED LOGIC] ---
+            // 1. หาค่าสีตั้งต้น (ถ้าไม่มีให้ใช้ค่า Default)
             const rawColor = item.color || item.activeColor || "bg-teal-500";
             
-            // 2. คำนวณ class สีต่างๆ อย่างปลอดภัย
-            const borderColor = rawColor.includes('bg-') ? rawColor.replace('bg-', 'border-') : 'border-teal-500';
-            const iconBgColor = rawColor.includes('500') ? rawColor.replace('500', '100') : 'bg-teal-100';
-            // ----------------------------------------------
+            // 2. คำนวณตัวแปรสีที่จะใช้ใน JSX (กัน Error)
+            // เช็คว่าเป็น string ก่อนเรียก replace
+            const colorStr = typeof rawColor === 'string' ? rawColor : "bg-teal-500";
+            
+            const borderColor = colorStr.includes('bg-') ? colorStr.replace('bg-', 'border-') : 'border-teal-500';
+            const iconBgColor = colorStr.includes('500') ? colorStr.replace('500', '100') : 'bg-teal-100';
+            // ---------------------
 
             return (
               <motion.div
@@ -72,19 +73,18 @@ export default function NineZerosPage() {
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 variants={cardVariants}
-                // กล่องการ์ด (ใช้ตัวแปร borderColor ที่คำนวณแล้ว)
+                // [จุดสำคัญ] ใช้ตัวแปร borderColor ที่คำนวณแล้ว (ห้ามใช้ item.color.replace ตรงนี้)
                 className={`p-6 rounded-2xl shadow-lg border-t-4 ${borderColor} bg-white hover:shadow-xl transition-all duration-300 cursor-pointer group`}
               >
                 <div className="flex items-center space-x-4 mb-4">
-                  {/* Icon (ใช้ตัวแปร iconBgColor ที่คำนวณแล้ว) */}
+                  {/* [จุดสำคัญ] ใช้ตัวแปร iconBgColor ที่คำนวณแล้ว */}
                   <div className={`flex-shrink-0 w-12 h-12 rounded-full ${iconBgColor} flex items-center justify-center`}>
                     <Icon size={24} className={`text-teal-700`} />
                   </div>
                   
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 group-hover:text-teal-700 transition-colors">{item.id}. {item.title}</h2>
-                    <h3 className="text-md font-semibold text-teal-700">{item.subtitle || item.titleTh}</h3> 
-                    {/* เพิ่ม fallback titleTh เผื่อ subtitle ไม่มี */}
+                    <h3 className="text-md font-semibold text-teal-700">{item.subtitle || item.titleTh}</h3>
                   </div>
                 </div>
 
@@ -92,7 +92,6 @@ export default function NineZerosPage() {
                     {item.goal}
                 </p>
 
-                {/* ปุ่มดูรายละเอียด */}
                 <Link href={`#${item.id}`} className="text-xs font-bold uppercase tracking-wide text-teal-600 hover:text-teal-800 transition-colors flex items-center gap-1">
                     ดูเป้าหมายเชิงลึก <ArrowRight size={14} />
                 </Link>
