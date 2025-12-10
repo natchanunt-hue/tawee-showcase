@@ -14,6 +14,10 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Tawee Sodsong | พ.ต.อ.ทวี สอดส่อง",
   description: "ผลงาน นโยบาย และภารกิจ ของ พ.ต.อ.ทวี สอดส่อง",
+robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }) {
