@@ -22,6 +22,7 @@ export default function NineZerosPage() {
   return (
     <div className={`min-h-screen ${bgColor} ${kanit.className} text-slate-800 overflow-x-hidden selection:bg-teal-500 selection:text-white`}>
       
+      {/* --- Navbar --- */}
       <nav className="fixed top-0 left-0 right-0 p-6 z-50 flex justify-start items-center bg-white/90 backdrop-blur-md border-b border-teal-200 shadow-sm">
         <Link href="/" className="flex items-center gap-2 text-slate-700 hover:text-teal-600 transition-colors group">
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -29,8 +30,13 @@ export default function NineZerosPage() {
         </Link>
       </nav>
 
+      {/* --- Hero Header --- */}
       <header className="pt-32 pb-16 px-6 md:px-12 text-center border-b-4 border-teal-600 shadow-inner">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+        >
             <h1 className="text-5xl md:text-6xl font-extrabold text-teal-800 mb-2">พันธกิจ 9 ศูนย์</h1>
             <p className="text-xl md:text-2xl font-light text-slate-600">
                 Nine Zeros Mission: วิสัยทัศน์สู่คุณภาพชีวิตคนไทยเป็นศูนย์
@@ -39,16 +45,23 @@ export default function NineZerosPage() {
         </motion.div>
       </header>
 
+      {/* --- Grid Content --- */}
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {nineZeros.map((item, index) => {
             const Icon = getIcon(item.icon);
             
-            // [Safety Mode] ใช้สีเขียว Teal เป็นธีมหลักทั้งหมด ตัดปัญหา replace error
-            const borderColor = "border-teal-500";
-            const iconBgColor = "bg-teal-100";
-            const iconTextColor = "text-teal-700";
+            // --- [จุดแก้ไขที่ 1] คำนวณสีให้เสร็จตรงนี้ (Safe Logic) ---
+            const rawColor = item.color || item.activeColor || "bg-teal-500";
+            
+            // ตรวจสอบว่าเป็น String แน่ๆ
+            const safeColor = (typeof rawColor === 'string') ? rawColor : "bg-teal-500";
+
+            // สร้าง class สีเตรียมไว้
+            const borderColor = safeColor.includes('bg-') ? safeColor.replace('bg-', 'border-') : 'border-teal-500';
+            const iconBgColor = safeColor.includes('500') ? safeColor.replace('500', '100') : 'bg-teal-100';
+            // ----------------------------------------------------
 
             return (
               <motion.div
@@ -58,11 +71,13 @@ export default function NineZerosPage() {
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 variants={cardVariants}
+                // --- [จุดแก้ไขที่ 2] ใช้ตัวแปร borderColor แทน item.color.replace ---
                 className={`p-6 rounded-2xl shadow-lg border-t-4 ${borderColor} bg-white hover:shadow-xl transition-all duration-300 cursor-pointer group`}
               >
                 <div className="flex items-center space-x-4 mb-4">
+                  {/* --- [จุดแก้ไขที่ 3] ใช้ตัวแปร iconBgColor แทน item.color.replace --- */}
                   <div className={`flex-shrink-0 w-12 h-12 rounded-full ${iconBgColor} flex items-center justify-center`}>
-                    <Icon size={24} className={iconTextColor} />
+                    <Icon size={24} className={`text-teal-700`} />
                   </div>
                   
                   <div>
@@ -86,6 +101,7 @@ export default function NineZerosPage() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="text-center p-8 mt-12 bg-white text-slate-500 text-sm border-t border-teal-200">
           Nine Zeros Mission: A Commitment to the People's Quality of Life.
       </footer>
