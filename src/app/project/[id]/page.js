@@ -1,16 +1,22 @@
 "use client";
+// --------------------------------------------------------
+// ส่วนที่ 1: Imports
+// --------------------------------------------------------
 import { useEffect, useState, use } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft, Quote, PlayCircle } from "lucide-react";
-import { Kanit } from "next/font/google"; 
-import { doc, getDoc } from "firebase/firestore"; 
-import { db } from "../../../lib/firebase"; 
+import { Kanit } from "next/font/google";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../../../lib/firebase";
 import { projects } from "../../../data/projects";
 
+// ตั้งค่าฟอนต์
 const kanit = Kanit({ subsets: ["thai", "latin"], weight: ["300", "400", "500", "600", "700"], display: "swap" });
 
-// --- Helper Functions ---
+// --------------------------------------------------------
+// ส่วนที่ 2: Helper Functions (แปลงเวลา / แปลงลิงก์ YouTube)
+// --------------------------------------------------------
 const convertToSeconds = (timeStr) => {
   if (!timeStr) return null;
   if (/^\d+$/.test(timeStr)) return timeStr;
@@ -53,10 +59,10 @@ const getYouTubeEmbedUrl = (url) => {
   return embedUrl;
 };
 
-// --- NEW COMPONENT: Zigzag Section ---
-// รับข้อมูล 1 Block มา Render เป็น Row
+// --------------------------------------------------------
+// ส่วนที่ 3: Component ย่อย (ZigzagSection)
+// --------------------------------------------------------
 const ZigzagSection = ({ data, isEven }) => {
-    // 1. Render Text Side
     const TextContent = (
         <div className="flex flex-col gap-4">
             {data.heading && (
@@ -72,7 +78,6 @@ const ZigzagSection = ({ data, isEven }) => {
         </div>
     );
 
-    // 2. Render Media Side
     let MediaContent = null;
     
     if (data.mediaType === 'image' && data.mediaSrc) {
@@ -117,7 +122,6 @@ const ZigzagSection = ({ data, isEven }) => {
         );
     }
 
-    // กรณีไม่มี Media เลย ให้ Text เต็มจอ
     if (!MediaContent) {
         return (
             <motion.div 
@@ -137,40 +141,52 @@ const ZigzagSection = ({ data, isEven }) => {
         transition={{ duration: 0.7, ease: "easeOut" }}
         className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-start gap-8 md:gap-12 py-10 border-b border-slate-200 last:border-0`}
       >
-        {/* Media Side (50%) */}
-        <div className="w-full md:w-1/2">
-            {MediaContent}
-        </div>
-        
-        {/* Text Side (50%) */}
-        <div className="w-full md:w-1/2">
-            {TextContent}
-        </div>
+        <div className="w-full md:w-1/2">{MediaContent}</div>
+        <div className="w-full md:w-1/2">{TextContent}</div>
       </motion.div>
     );
 };
 
+// --------------------------------------------------------
+// ส่วนที่ 4: Page Component หลัก
+// --------------------------------------------------------
 export default function ProjectDetail({ params }) {
+  // [FIX] ใช้ use() เพื่อรองรับ Next.js 15/16
   const unwrappedParams = use(params);
-  const id = unwrappedParams.id;
+  const paramId = unwrappedParams.id;
+  
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProject = async () => {
         try {
-            const docRef = doc(db, "projects", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) setProject({ id: docSnap.id, ...docSnap.data() });
-            else {
-                const staticProject = projects.find(p => p.id.toString() === id.toString());
-                if (staticProject) setProject(staticProject);
+            // Logic ค้นหา: หาจาก Slug ก่อน -> ถ้าไม่เจอหาจาก ID -> ถ้าไม่เจอหาจาก Static Data
+            const q = query(collection(db, "projects"), where("slug", "==", paramId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const docData = querySnapshot.docs[0];
+                setProject({ id: docData.id, ...docData.data() });
+            } else {
+                const docRef = doc(db, "projects", paramId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    setProject({ id: docSnap.id, ...docSnap.data() });
+                } else {
+                    const staticProject = projects.find(p => p.id.toString() === paramId.toString());
+                    if (staticProject) setProject(staticProject);
+                }
             }
-        } catch (error) { console.error("Error:", error); } 
-        finally { setLoading(false); }
+        } catch (error) { 
+            console.error("Error fetching project:", error); 
+        } finally { 
+            setLoading(false); 
+        }
     };
-    if (id) fetchProject();
-  }, [id]);
+
+    if (paramId) fetchProject();
+  }, [paramId]);
 
   if (loading) return (
     <div className={`h-screen flex items-center justify-center bg-[#f8fafc] text-slate-500 ${kanit.className}`}>
@@ -186,6 +202,7 @@ export default function ProjectDetail({ params }) {
         <div className="text-center p-10 bg-white rounded-3xl shadow-xl max-w-md mx-4">
             <h1 className="text-6xl font-bold mb-4 text-slate-200">404</h1>
             <p className="text-lg text-slate-700 font-medium mb-6">ไม่พบข้อมูลโปรเจกต์นี้</p>
+            <p className="text-xs text-slate-400 mb-6">รหัสอ้างอิง: {paramId}</p>
             <Link href="/" className="inline-block px-8 py-3 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition-colors shadow-lg hover:shadow-amber-500/30">
                 กลับหน้าหลัก
             </Link>
@@ -195,8 +212,6 @@ export default function ProjectDetail({ params }) {
 
   return (
     <div className={`min-h-screen bg-[#f8fafc] text-slate-800 ${kanit.className} selection:bg-amber-500 selection:text-white`}>
-      
-      {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 p-4 md:p-6 z-50 flex justify-between items-center bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
         <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-amber-700 transition-colors group px-3 py-2 rounded-lg hover:bg-slate-50">
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -207,7 +222,6 @@ export default function ProjectDetail({ params }) {
         </span>
       </nav>
 
-      {/* Hero Image Section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="pt-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
         <div className="rounded-[2rem] overflow-hidden shadow-2xl h-[50vh] md:h-[65vh] relative group bg-slate-200">
             <img src={project.image || "/images/hero/bg-main.jpg"} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
@@ -228,10 +242,7 @@ export default function ProjectDetail({ params }) {
         </div>
       </motion.div>
 
-      {/* Content Section */}
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="max-w-5xl mx-auto px-6 py-10 md:py-20">
-        
-        {/* Header Content */}
         <div className="flex items-center gap-4 mb-8 md:mb-10 pb-4 border-b border-slate-200">
             <div className="h-10 md:h-12 w-1.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
             <h3 className="text-xl md:text-3xl font-bold text-slate-900 m-0 break-words leading-tight">
@@ -239,18 +250,13 @@ export default function ProjectDetail({ params }) {
             </h3>
         </div>
         
-        {/* Render Zigzag Content */}
         <div className="prose prose-lg prose-slate mx-auto max-w-none">
             {project.contentBlocks && project.contentBlocks.length > 0 ? (
                 project.contentBlocks.map((block, index) => {
-                    // Check logic เพื่อรองรับ data structure เก่า (เผื่อมีหลงเหลือ)
-                    // ถ้า data เป็นแบบใหม่จะมี field 'mediaType'
                     if (block.mediaType || block.heading || block.content) {
                         return <ZigzagSection key={index} data={block} isEven={index % 2 === 0} />;
-                    } else {
-                        // Fallback สำหรับ Data เก่า (ถ้าจำเป็น)
-                        return null; 
                     }
+                    return null;
                 })
             ) : (
                 <div className="space-y-8 text-lg leading-relaxed text-slate-600 font-light text-center py-10 opacity-60">
@@ -259,20 +265,13 @@ export default function ProjectDetail({ params }) {
             )}
         </div>
 
-        {/* Footer in Detail */}
         <div className="mt-16 md:mt-24 pt-10 border-t border-slate-200 flex flex-col items-center text-center space-y-4 md:space-y-6 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-slate-200 rounded-full border-4 border-[#f8fafc]"></div>
-            
             <motion.img 
-                initial={{ scale: 0.5, opacity: 0 }} 
-                whileInView={{ scale: 1, opacity: 1 }} 
-                viewport={{ once: true }} 
-                transition={{ delay: 0.2, duration: 0.6 }} 
+                initial={{ scale: 0.5, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.6 }} 
                 src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png" 
-                alt="Tawee Profile" 
-                className="w-32 h-32 md:w-48 md:h-48 object-contain relative z-10 drop-shadow-2xl -mt-1" 
+                alt="Tawee Profile" className="w-32 h-32 md:w-48 md:h-48 object-contain relative z-10 drop-shadow-2xl -mt-1" 
             />
-            
             <div>
                 <p className="text-slate-900 font-bold text-xl md:text-2xl">พ.ต.อ.ทวี สอดส่อง</p>
                 <p className="text-slate-500 text-sm md:text-base tracking-wide mt-1">ขับเคลื่อนนโยบายเพื่อประชาชน</p>
