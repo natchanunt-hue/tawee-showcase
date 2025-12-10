@@ -28,57 +28,99 @@ const getIconComponent = (iconName) => {
     return icons[iconName] || Circle;
 };
 
-// --- MODAL COMPONENT ---
+// --- MODAL COMPONENT (ฉบับแก้ไข: กัน Error .replace is not function) ---
 const ZeroDetailModal = ({ item, onClose }) => {
     if (!item) return null;
+    
+    // [SAFETY 1] ดึงค่า Icon และ Color พร้อมค่า Default กันพัง
+    // ถ้า item.activeColor ไม่มีค่า ให้ใช้ "text-slate-500" แทน
     const Icon = getIcon(item.icon);
+    const themeColor = item.activeColor || "text-slate-500"; 
+    const themeBg = item.activeBg || "bg-slate-50";
+    const themeBorder = item.activeBorder || "border-slate-200";
+
+    // [SAFETY 2] ฟังก์ชันช่วยแปลงสี Text เป็นสี BG อย่างปลอดภัย
+    const getDotColor = (textColor) => {
+        // เช็คว่าเป็น string และมีค่าไหม ถ้าไม่มีให้คืนค่าสีเทา
+        if (!textColor || typeof textColor !== 'string') return "bg-slate-500";
+        // ลอง replace ดู
+        try {
+            return textColor.replace("text", "bg");
+        } catch (e) {
+            return "bg-slate-500"; // ถ้า error ให้ใช้สีเทา
+        }
+    };
     
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
                 animate={{ opacity: 1, scale: 1, y: 0 }} 
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl"
             >
-                <div className={`p-6 md:p-8 ${item.activeBg} border-b ${item.activeBorder} flex justify-between items-start sticky top-0 bg-opacity-95 backdrop-blur z-20`}>
+                {/* Header */}
+                <div className={`p-6 md:p-8 ${themeBg} border-b ${themeBorder} flex justify-between items-start sticky top-0 bg-opacity-95 backdrop-blur z-20`}>
                    <div className="flex items-center gap-4">
                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-white/50 backdrop-blur`}>
-                           <Icon size={24} className={item.activeColor} />
+                           <Icon size={24} className={themeColor} />
                        </div>
                        <div>
                            <div className="text-xs font-bold uppercase opacity-60 tracking-wider">Mission 0{item.id}</div>
-                           <h3 className={`text-xl md:text-2xl font-bold ${item.activeColor}`}>{item.title}</h3>
+                           <h3 className={`text-xl md:text-2xl font-bold ${themeColor}`}>{item.title}</h3>
                            <p className="text-sm font-medium text-slate-600">{item.titleTh}</p>
                        </div>
                    </div>
                    <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors"><CloseIcon size={20}/></button>
                 </div>
+
+                {/* Content */}
                 <div className="p-6 md:p-8 space-y-8">
-                    <div><p className="text-lg text-slate-700 leading-relaxed font-light">{item.details?.description}</p></div>
                     <div>
-    <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 border-b-2 inline-block pb-1 ${item.activeBorder} ${item.activeColor}`}>
-        กลไกสำคัญ (How)
-    </h4>
-    <ul className="space-y-3">
-        {item.details?.mechanisms?.map((mech, i) => (
-            <li key={i} className="flex items-start gap-3">
-                {/* เทคนิค: ใช้ 'bg-current' คู่กับ 'item.activeColor' (ที่เป็น text-...) 
-                   เพื่อให้สีพื้นหลังของวงกลม เปลี่ยนตามสีตัวหนังสือของธีมนั้นๆ ได้ทันที 
-                   โดยไม่ต้องใช้ replace string ซึ่งบางที Tailwind อ่านไม่ออก
-                */}
-                <div className={`mt-[0.6rem] w-2 h-2 rounded-full shrink-0 bg-current ${item.activeColor}`}></div>
-                <span className="text-slate-700 text-sm md:text-base leading-relaxed">{mech}</span>
-            </li>
-        ))}
-    </ul>
-</div>
+                        <p className="text-lg text-slate-700 leading-relaxed font-light">{item.details?.description}</p>
+                    </div>
+
+                    {/* How (Mechanisms) - จุดที่เคย Error */}
+                    <div>
+                        <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 border-b-2 inline-block pb-1 ${themeBorder} ${themeColor}`}>
+                            กลไกสำคัญ (How)
+                        </h4>
+                        <ul className="space-y-4">
+                            {item.details?.mechanisms?.map((mech, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                    {/* เรียกใช้ฟังก์ชัน getDotColor แทนการ replace ตรงๆ */}
+                                    <div className={`mt-2 w-2 h-2 rounded-full shrink-0 ${getDotColor(themeColor)}`}></div>
+                                    <span className="text-slate-700 text-sm md:text-base leading-relaxed">{mech}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
                     <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                         <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${item.activeColor}`}>{item.details?.graphTitle || "เป้าหมายและตัวชี้วัด"}</h4>
-                        <div className="space-y-5">{item.details?.graphs?.map((graph, i) => (<div key={i}><div className="flex justify-between text-xs md:text-sm mb-1.5 font-medium text-slate-600"><span>{graph.label}</span><span>{graph.value}</span></div><div className="w-full bg-slate-200 rounded-full h-3 md:h-4 overflow-hidden"><motion.div initial={{ width: 0 }} whileInView={{ width: `${graph.percent}%` }} transition={{ duration: 1, delay: 0.2 }} className={`h-full rounded-full ${graph.color}`}></motion.div></div></div>))}</div>
-                        <div className="mt-4 flex justify-end">
+                         <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${themeColor}`}>
+                            {item.details?.graphTitle || "เป้าหมายและตัวชี้วัด"}
+                        </h4>
+                        <div className="space-y-5">
+                            {item.details?.graphs?.map((graph, i) => (
+                                <div key={i}>
+                                    <div className="flex justify-between text-xs md:text-sm mb-1.5 font-medium text-slate-600">
+                                        <span>{graph.label}</span>
+                                        <span>{graph.value}</span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 rounded-full h-3 md:h-4 overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }} 
+                                            whileInView={{ width: `${graph.percent}%` }}
+                                            transition={{ duration: 1, delay: 0.2 }}
+                                            className={`h-full rounded-full ${graph.color}`}
+                                        ></motion.div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-6 flex justify-end pt-4 border-t border-slate-200/50">
                             {item.details?.sourceUrl ? (
                                 <a 
                                     href={item.details.sourceUrl} 
@@ -86,14 +128,11 @@ const ZeroDetailModal = ({ item, onClose }) => {
                                     rel="noopener noreferrer"
                                     className="group relative flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 hover:text-teal-600 transition-colors cursor-pointer py-1"
                                 >
-                                    <span className="italic">{item.details?.source}</span>
+                                    <span className="italic font-medium">{item.details?.source}</span>
                                     <ExternalLink size={12} />
-                                    
-                                    {/* Tooltip Popup */}
-                                    <span className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-max px-2 py-1 bg-slate-800 text-white text-[10px] rounded shadow-lg z-50">
-                                        คลิกเพื่อดูแหล่งที่มาของข้อมูล
-                                        {/* ลูกศรชี้ลงเล็กๆ */}
-                                        <span className="absolute top-full right-2 -mt-1 border-4 border-transparent border-t-slate-800"></span>
+                                    <span className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-max px-3 py-1.5 bg-slate-800 text-white text-[10px] rounded-lg shadow-xl z-50">
+                                        คลิกเพื่อดูแหล่งข้อมูลอ้างอิง
+                                        <span className="absolute top-full right-3 -mt-1 border-4 border-transparent border-t-slate-800"></span>
                                     </span>
                                 </a>
                             ) : (
