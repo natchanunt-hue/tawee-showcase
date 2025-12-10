@@ -54,6 +54,16 @@ export default function NineZerosPage() {
           
           {nineZeros.map((item, index) => {
             const Icon = getIcon(item.icon); // ดึง Icon Component มาใช้
+            
+            // --- [FIXED] ส่วนที่แก้บั๊ก: เช็คค่าสีก่อนใช้งาน ---
+            // 1. ลองหา color หรือ activeColor หรือใช้ค่า default (bg-teal-500)
+            const rawColor = item.color || item.activeColor || "bg-teal-500";
+            
+            // 2. คำนวณ class สีต่างๆ อย่างปลอดภัย
+            const borderColor = rawColor.includes('bg-') ? rawColor.replace('bg-', 'border-') : 'border-teal-500';
+            const iconBgColor = rawColor.includes('500') ? rawColor.replace('500', '100') : 'bg-teal-100';
+            // ----------------------------------------------
+
             return (
               <motion.div
                 key={item.id}
@@ -62,18 +72,19 @@ export default function NineZerosPage() {
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 variants={cardVariants}
-                // กล่องการ์ด
-                className={`p-6 rounded-2xl shadow-lg border-t-4 ${item.color.replace('bg-', 'border-')} bg-white hover:shadow-xl transition-all duration-300 cursor-pointer group`}
+                // กล่องการ์ด (ใช้ตัวแปร borderColor ที่คำนวณแล้ว)
+                className={`p-6 rounded-2xl shadow-lg border-t-4 ${borderColor} bg-white hover:shadow-xl transition-all duration-300 cursor-pointer group`}
               >
                 <div className="flex items-center space-x-4 mb-4">
-                  {/* Icon */}
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${item.color.replace('500', '100')} flex items-center justify-center`}>
+                  {/* Icon (ใช้ตัวแปร iconBgColor ที่คำนวณแล้ว) */}
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${iconBgColor} flex items-center justify-center`}>
                     <Icon size={24} className={`text-teal-700`} />
                   </div>
                   
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 group-hover:text-teal-700 transition-colors">{item.id}. {item.title}</h2>
-                    <h3 className="text-md font-semibold text-teal-700">{item.subtitle}</h3>
+                    <h3 className="text-md font-semibold text-teal-700">{item.subtitle || item.titleTh}</h3> 
+                    {/* เพิ่ม fallback titleTh เผื่อ subtitle ไม่มี */}
                   </div>
                 </div>
 
@@ -81,7 +92,7 @@ export default function NineZerosPage() {
                     {item.goal}
                 </p>
 
-                {/* ปุ่มดูรายละเอียด (ถ้ามีหน้ารายละเอียดแยกย่อย) */}
+                {/* ปุ่มดูรายละเอียด */}
                 <Link href={`#${item.id}`} className="text-xs font-bold uppercase tracking-wide text-teal-600 hover:text-teal-800 transition-colors flex items-center gap-1">
                     ดูเป้าหมายเชิงลึก <ArrowRight size={14} />
                 </Link>
