@@ -1,18 +1,23 @@
-import { initializeApp } from "firebase/app";
+// src/lib/firebase.js
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // <--- 1. เพิ่มบรรทัดนี้
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  // ... ค่า Config เดิมของคุณ ...
-  apiKey: "AIzaSyBGxVUfryG5S5wwGunigipES364YG-AHrI",
-  authDomain: "tawee-showcase.firebaseapp.com",
-  projectId: "tawee-showcase",
-  storageBucket: "tawee-showcase.firebasestorage.app",
-  messagingSenderId: "768450775564",
-  appId: "1:768450775564:web:8b26023ce9a4963b9cfc29",
-  measurementId: "G-P9YWGDDZNL"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app); // <--- 2. เพิ่มบรรทัดนี้ เพื่อส่งออกระบบ Login
+// Initialize Firebase (ป้องกันการ init ซ้ำ)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+export { db, auth, storage };
