@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🇹🇭 Tawee Showcase | Pol.Col. Tawee Sodsong
 
-## Getting Started
+**Official Web Application** สำหรับนำเสนอผลงาน นโยบาย และภารกิจสำคัญของ **พ.ต.อ.ทวี สอดส่อง**
 
-First, run the development server:
+![Project Banner](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌐 เข้าชมเว็บไซต์จริง (Live Site)
+### 👉 **[https://tawee-showcase.vercel.app](https://tawee-showcase.vercel.app)**
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💡 เกี่ยวกับโปรเจกต์ (Overview)
 
-## Learn More
+เว็บไซต์นี้ถูกออกแบบมาเพื่อเป็นศูนย์กลางข้อมูลดิจิทัล (Digital Hub) ที่เชื่อมโยงวิสัยทัศน์สู่การปฏิบัติจริง โดยมีจุดเด่นคือ:
+1.  **การนำเสนอแบบ Storytelling:** เล่าเรื่องราวผ่านดีไซน์ที่ทันสมัย (Zigzag Layout)
+2.  **การเข้าถึงข้อมูล:** ออกแบบให้ใช้งานง่ายทั้งบนมือถือและคอมพิวเตอร์ (Responsive)
+3.  **ระบบจัดการเนื้อหา (CMS):** ทีมงานสามารถอัปเดตข่าวสารและโครงการใหม่ๆ ได้เองทันทีผ่านระบบหลังบ้าน
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ ฟีเจอร์หลัก (Key Features)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🏠 หน้าบ้าน (Public Interface)
+* **Interactive UI:** ภาพเคลื่อนไหวเปิดตัวและ Transition ที่นุ่มนวลด้วย Framer Motion
+* **Nine Zeros Mission:** การนำเสนอพันธกิจ 9 ศูนย์ ในรูปแบบ Interactive Card
+* **Dynamic Projects:** แสดงรายละเอียดโครงการพร้อมรูปภาพ วิดีโอ และคำคม
+* **Multimedia Support:** ระบบฝังวิดีโอ YouTube อัตโนมัติ
 
-## Deploy on Vercel
+### 🔐 ระบบหลังบ้าน (Admin Panel)
+* **Secure Access:** ปลอดภัยด้วยระบบล็อกอินผ่าน Firebase Authentication
+* **Content Management:** สร้าง/แก้ไข/ลบ โครงการต่างๆ ได้แบบ Real-time
+* **SEO Friendly:** ระบบสร้างลิงก์ภาษาอังกฤษ (Slug) อัตโนมัติ เพื่อการค้นหาที่ดีขึ้น
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛠️ เทคโนโลยีที่ใช้ (Tech Stack)
+
+* **Framework:** Next.js 15 (App Router)
+* **Styling:** Tailwind CSS
+* **Animation:** Framer Motion
+* **Database:** Firebase (Firestore)
+* **Deployment:** Vercel
+
+---
+
+Developed by **Natchanun Fufonglabs**
