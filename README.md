@@ -1,8 +1,8 @@
 # 🇹🇭 Tawee Showcase | Pol.Col. Tawee Sodsong
 
-**Official Web Application** สำหรับนำเสนอผลงาน นโยบาย และภารกิจสำคัญของ **พ.ต.อ.ทวี สอดส่อง**
+**Official Web Application** สำหรับนำเสนอผลงาน นโยบาย และภารกิจสำคัญของ **พ.ต.อ.ทวี สอดส่อง** พัฒนาด้วยเทคโนโลยี Modern Web ล่าสุด เพื่อประสิทธิภาพและความสวยงามสูงสุด
 
-![Project Banner](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png)
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png" alt="Project Banner" width="600">
 
 ---
 
