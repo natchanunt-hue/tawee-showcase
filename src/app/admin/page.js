@@ -19,7 +19,7 @@ export default function AdminPage() {
   
   // State หลัก
   const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState(""); // [NEW] เพิ่ม State Slug
+  const [slug, setSlug] = useState("");
   const [category, setCategory] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -109,11 +109,10 @@ export default function AdminPage() {
   // --- Helper: Generate Slug ---
   const generateSlug = () => {
       if (!title) return;
-      // แปลงชื่อเป็น slug ง่ายๆ (ถ้าเป็นภาษาไทยอาจจะไม่สวย แนะนำให้พิมพ์อังกฤษเองดีที่สุด)
       const newSlug = title.toLowerCase()
-          .replace(/[^\w\s-]/g, '') // เอาอักขระพิเศษออก
-          .replace(/\s+/g, '-')     // เปลี่ยนช่องว่างเป็นขีด
-          .replace(/^-+|-+$/g, ''); // ลบขีดหน้าหลัง
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/^-+|-+$/g, '');
       setSlug(newSlug);
   }
 
@@ -136,7 +135,7 @@ export default function AdminPage() {
 
     const rawPayload = {
         title, 
-        slug: slug || "", // [NEW] บันทึก Slug
+        slug: slug || "", 
         category, shortDesc, image: coverImage, 
         order: Number(order) || 0, 
         contentTitle: contentTitle || "", 
@@ -173,7 +172,7 @@ export default function AdminPage() {
   // --- Handle Edit Click ---
   const handleEditClick = (item) => {
       setEditId(item.id); setTitle(item.title); 
-      setSlug(item.slug || ""); // [NEW] ดึง Slug มาโชว์
+      setSlug(item.slug || ""); 
       setCategory(item.category); setShortDesc(item.shortDesc); setCoverImage(item.image);
       setOrder(item.order || 0); setContentTitle(item.contentTitle || "");
       if (item.contentBlocks && Array.isArray(item.contentBlocks)) setBlocks(item.contentBlocks); else setBlocks([]);
@@ -239,12 +238,43 @@ export default function AdminPage() {
                              <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">คำอธิบายย่อ</label><textarea value={shortDesc} onChange={e => setShortDesc(e.target.value)} rows={2} className="w-full p-2 border border-slate-300 rounded text-sm" /></div>
                         </div>
 
-                        {/* ... (ส่วน Content Title, Categories, Blocks เหมือนเดิมเป๊ะ ไม่ต้องแก้) ... */}
-                        
                         <div className="p-4 bg-amber-50 rounded border border-amber-200">
                              <label className="text-xs font-bold text-amber-800 uppercase block mb-1">หัวข้อส่วนเนื้อหา (Custom Title)</label>
                              <input type="text" value={contentTitle} onChange={e => setContentTitle(e.target.value)} placeholder="ค่าเริ่มต้น: รายละเอียดและผลการดำเนินงาน" className="w-full p-2 border rounded text-sm bg-white"/>
                         </div>
+
+                        {/* --- [RESTORED] ส่วนจัดการหมวดหมู่ที่หายไป --- */}
+                        <div className="p-4 bg-slate-50 rounded border border-slate-200">
+                             <label className="text-xs font-bold text-slate-500 uppercase block mb-2">จัดการหมวดหมู่ (Categories)</label>
+                             <div className="space-y-3">
+                                <div className="flex gap-2">
+                                    <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มชื่อหมวดหมู่ใหม่..." className="flex-1 p-2 border rounded text-sm" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCategory())}/>
+                                    <button type="button" onClick={handleAddCategory} className="px-4 py-2 bg-teal-600 text-white rounded text-sm font-bold hover:bg-teal-700 flex items-center gap-1"><Plus size={14}/> เพิ่ม</button>
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+                                    {categories.map(cat => (
+                                        <div key={cat} className={`flex items-center gap-2 pl-3 pr-2 py-1 rounded-full border text-xs shadow-sm transition-all ${editingCategory === cat ? 'bg-amber-100 border-amber-300 w-full md:w-auto' : 'bg-white border-slate-300'}`}>
+                                            {editingCategory === cat ? (
+                                                <>
+                                                    <input type="text" value={tempEditValue} onChange={(e) => setTempEditValue(e.target.value)} className="bg-transparent border-b border-amber-400 focus:outline-none text-slate-800 font-bold min-w-[120px]" autoFocus />
+                                                    <button type="button" onClick={saveEditCategory} className="p-1 text-green-600 hover:bg-green-100 rounded-full"><Check size={14}/></button>
+                                                    <button type="button" onClick={cancelEditCategory} className="p-1 text-red-500 hover:bg-red-100 rounded-full"><X size={14}/></button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="font-medium text-slate-600">{cat}</span>
+                                                    <div className="flex gap-1 border-l border-slate-200 pl-2 ml-1">
+                                                        <button type="button" onClick={() => startEditCategory(cat)} className="text-slate-400 hover:text-amber-500 transition-colors" title="แก้ไขชื่อ"><Pencil size={10}/></button>
+                                                        <button type="button" onClick={() => handleRemoveCategory(cat)} className="text-slate-400 hover:text-red-500 transition-colors" title="ลบ"><X size={12}/></button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                             </div>
+                        </div>
+                        {/* ----------------------------------------------- */}
 
                         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                              <div className="flex justify-between items-center mb-4">
