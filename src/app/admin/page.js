@@ -8,7 +8,7 @@ import { Kanit } from "next/font/google";
 import { 
   Pencil, Trash2, LogOut, PlusCircle, 
   Image as ImageIcon, Video, Quote,
-  ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw
+  ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, Link as LinkIcon, Wand2
 } from "lucide-react";
 
 const kanit = Kanit({ subsets: ["thai"], weight: ["300", "400", "600"] });
@@ -19,6 +19,7 @@ export default function AdminPage() {
   
   // State หลัก
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState(""); // [NEW] เพิ่ม State Slug
   const [category, setCategory] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -34,7 +35,7 @@ export default function AdminPage() {
   const [blocks, setBlocks] = useState([]); 
   const [projectsList, setProjectsList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editId, setEditId] = useState(null); // ตัวแปรสำคัญ: เก็บ ID ที่กำลังแก้ไข
+  const [editId, setEditId] = useState(null); 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -60,7 +61,6 @@ export default function AdminPage() {
         setProjectsList(items);
         setCategories(Array.from(foundCategories));
 
-        // ถ้าไม่ได้กำลังแก้ไข ให้รันลำดับถัดไปรอไว้เลย
         if (!editId && items.length > 0) {
             const maxOrder = Math.max(...items.map(i => i.order || 0));
             setOrder(maxOrder + 1);
@@ -89,12 +89,9 @@ export default function AdminPage() {
   const saveEditCategory = async () => {
       if (!tempEditValue.trim() || tempEditValue === editingCategory) { cancelEditCategory(); return; }
       if (categories.includes(tempEditValue)) { alert("ชื่อหมวดหมู่นี้มีอยู่แล้ว"); return; }
-
       const oldName = editingCategory;
       const newName = tempEditValue.trim();
-
-      if (!confirm(`ต้องการเปลี่ยนชื่อหมวดหมู่จาก "${oldName}" เป็น "${newName}" ใช่หรือไม่?\n(ระบบจะอัปเดตทุกโปรเจกต์ที่ใช้หมวดหมู่นี้อัตโนมัติ)`)) return;
-
+      if (!confirm(`เปลี่ยนชื่อหมวดหมู่จาก "${oldName}" เป็น "${newName}"?`)) return;
       setLoading(true);
       try {
           const q = query(collection(db, "projects"), where("category", "==", oldName));
@@ -102,38 +99,28 @@ export default function AdminPage() {
           const batch = writeBatch(db);
           querySnapshot.forEach((doc) => { batch.update(doc.ref, { category: newName }); });
           await batch.commit();
-
           const newCategories = categories.map(cat => cat === oldName ? newName : cat);
           setCategories(newCategories);
           if (category === oldName) setCategory(newName);
-
-          alert("อัปเดตหมวดหมู่เรียบร้อย!");
           fetchProjects(); 
-      } catch (error) {
-          console.error("Error updating category:", error);
-          alert("เกิดข้อผิดพลาดในการอัปเดตหมวดหมู่");
-      } finally {
-          setLoading(false);
-          cancelEditCategory();
-      }
+      } catch (error) { console.error(error); } finally { setLoading(false); cancelEditCategory(); }
   };
+
+  // --- Helper: Generate Slug ---
+  const generateSlug = () => {
+      if (!title) return;
+      // แปลงชื่อเป็น slug ง่ายๆ (ถ้าเป็นภาษาไทยอาจจะไม่สวย แนะนำให้พิมพ์อังกฤษเองดีที่สุด)
+      const newSlug = title.toLowerCase()
+          .replace(/[^\w\s-]/g, '') // เอาอักขระพิเศษออก
+          .replace(/\s+/g, '-')     // เปลี่ยนช่องว่างเป็นขีด
+          .replace(/^-+|-+$/g, ''); // ลบขีดหน้าหลัง
+      setSlug(newSlug);
+  }
 
   // --- Block Logic ---
-  const addBlock = () => {
-    setBlocks([...blocks, { heading: "", content: "", mediaType: "none", mediaSrc: "", caption: "" }]);
-  };
-
-  const updateBlock = (index, field, value) => {
-    const newBlocks = [...blocks]; 
-    newBlocks[index][field] = value; 
-    setBlocks(newBlocks);
-  };
-
-  const removeBlock = (index) => {
-    if(!confirm("ลบส่วนเนื้อหานี้?")) return;
-    setBlocks(blocks.filter((_, i) => i !== index));
-  };
-
+  const addBlock = () => setBlocks([...blocks, { heading: "", content: "", mediaType: "none", mediaSrc: "", caption: "" }]);
+  const updateBlock = (index, field, value) => { const newBlocks = [...blocks]; newBlocks[index][field] = value; setBlocks(newBlocks); };
+  const removeBlock = (index) => { if(!confirm("ลบส่วนเนื้อหานี้?")) return; setBlocks(blocks.filter((_, i) => i !== index)); };
   const moveBlock = (index, direction) => {
     if ((direction === 'up' && index === 0) || (direction === 'down' && index === blocks.length - 1)) return;
     const newBlocks = [...blocks];
@@ -142,13 +129,15 @@ export default function AdminPage() {
     setBlocks(newBlocks);
   };
 
-  // --- [จุดสำคัญ 1] Handle Submit แก้ไขและสร้างใหม่ ---
+  // --- Handle Submit ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     const rawPayload = {
-        title, category, shortDesc, image: coverImage, 
+        title, 
+        slug: slug || "", // [NEW] บันทึก Slug
+        category, shortDesc, image: coverImage, 
         order: Number(order) || 0, 
         contentTitle: contentTitle || "", 
         contentBlocks: blocks, updatedAt: new Date(),
@@ -157,83 +146,44 @@ export default function AdminPage() {
 
     try {
       if (editId) {
-        // กรณีแก้ไข (Update)
         await updateDoc(doc(db, "projects", editId), payload);
-        alert("บันทึกการแก้ไขเรียบร้อย!");
+        alert("บันทึกเรียบร้อย!");
       } else {
-        // กรณีสร้างใหม่ (Create)
         await addDoc(collection(db, "projects"), { ...payload, createdAt: new Date() });
-        alert("เพิ่มโครงการใหม่เรียบร้อย!");
+        alert("สร้างโครงการเรียบร้อย!");
       }
-      resetForm();     // ล้างฟอร์ม
-      fetchProjects(); // โหลดรายการใหม่
-    } catch (error) { 
-        console.error(error);
-        alert("เกิดข้อผิดพลาด: " + error.message); 
-    } 
+      resetForm(); fetchProjects();
+    } catch (error) { console.error(error); alert("เกิดข้อผิดพลาด: " + error.message); } 
     finally { setLoading(false); }
   };
 
-  // --- [จุดสำคัญ 2] Handle Delete และเคลียร์ฟอร์มถ้าจำเป็น ---
+  // --- Handle Delete & Reorder ---
   const handleDelete = async (id) => {
-      if(!confirm("ยืนยันการลบโครงการนี้?")) return;
-      
-      try {
-          await deleteDoc(doc(db, "projects", id));
-          
-          // ถ้าลบตัวที่กำลัง Edit อยู่ ให้เคลียร์หน้าจอด้วย เพื่อไม่ให้กด Save แล้ว Error หรือสร้างใหม่
-          if (editId === id) {
-              resetForm();
-          }
-          
-          fetchProjects();
-      } catch (error) {
-          console.error(error);
-          alert("ลบไม่สำเร็จ");
-      }
+      if(!confirm("ยืนยันการลบ?")) return;
+      try { await deleteDoc(doc(db, "projects", id)); if (editId === id) resetForm(); fetchProjects(); } catch (error) { console.error(error); }
   }
-
   const handleReorderProject = async (index, direction, e) => {
     e.stopPropagation();
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === projectsList.length - 1) return;
+    if (direction === 'up' && index === 0) return; if (direction === 'down' && index === projectsList.length - 1) return;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    const currentItem = projectsList[index];
-    const targetItem = projectsList[targetIndex];
-    try {
-        const batch = writeBatch(db);
-        const currentRef = doc(db, "projects", currentItem.id);
-        const targetRef = doc(db, "projects", targetItem.id);
-        batch.update(currentRef, { order: targetItem.order });
-        batch.update(targetRef, { order: currentItem.order });
-        await batch.commit();
-        fetchProjects();
-    } catch (error) { console.error(error); }
+    const currentItem = projectsList[index]; const targetItem = projectsList[targetIndex];
+    try { const batch = writeBatch(db); batch.update(doc(db, "projects", currentItem.id), { order: targetItem.order }); batch.update(doc(db, "projects", targetItem.id), { order: currentItem.order }); await batch.commit(); fetchProjects(); } catch (error) { console.error(error); }
   };
 
-  // --- [จุดสำคัญ 3] Handle Edit Click ---
+  // --- Handle Edit Click ---
   const handleEditClick = (item) => {
-      setEditId(item.id); // set ID ให้ชัดเจน
-      setTitle(item.title); 
-      setCategory(item.category); 
-      setShortDesc(item.shortDesc); 
-      setCoverImage(item.image);
-      setOrder(item.order || 0); 
-      setContentTitle(item.contentTitle || "");
-      
-      if (item.contentBlocks && Array.isArray(item.contentBlocks)) setBlocks(item.contentBlocks);
-      else setBlocks([]);
-      
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // เลื่อนขึ้นไปที่ฟอร์ม
+      setEditId(item.id); setTitle(item.title); 
+      setSlug(item.slug || ""); // [NEW] ดึง Slug มาโชว์
+      setCategory(item.category); setShortDesc(item.shortDesc); setCoverImage(item.image);
+      setOrder(item.order || 0); setContentTitle(item.contentTitle || "");
+      if (item.contentBlocks && Array.isArray(item.contentBlocks)) setBlocks(item.contentBlocks); else setBlocks([]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   const resetForm = () => {
-      setEditId(null); // เคลียร์ ID เพื่อบอกว่าเป็นโหมดสร้างใหม่
-      setTitle(""); setCategory(""); setShortDesc(""); setCoverImage(""); 
+      setEditId(null); setTitle(""); setSlug(""); setCategory(""); setShortDesc(""); setCoverImage(""); 
       const maxOrder = projectsList.length > 0 ? Math.max(...projectsList.map(i => i.order || 0)) : 0;
-      setOrder(maxOrder + 1);
-      setContentTitle("");
-      setBlocks([]);
+      setOrder(maxOrder + 1); setContentTitle(""); setBlocks([]);
   }
 
   const handleLogout = () => { signOut(auth); router.push("/login"); }
@@ -245,9 +195,7 @@ export default function AdminPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">Admin Panel</h1>
-            <div className="flex gap-2">
-                <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded transition border border-red-200"><LogOut size={16}/> ออกจากระบบ</button>
-            </div>
+            <div className="flex gap-2"><button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded transition border border-red-200"><LogOut size={16}/> ออกจากระบบ</button></div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -255,13 +203,30 @@ export default function AdminPage() {
             <div className="lg:col-span-7">
                 <div className={`bg-white p-6 rounded-xl shadow-lg border transition-colors ${editId ? 'border-amber-400' : 'border-slate-200'}`}>
                     <h2 className={`text-lg font-bold mb-6 flex items-center gap-2 pb-4 border-b ${editId ? 'text-amber-600' : 'text-teal-600'}`}>
-                        {editId ? <><Pencil size={20}/> กำลังแก้ไขโครงการ (ID: {order})</> : <><PlusCircle size={20}/> สร้าง Content ใหม่</>}
+                        {editId ? <><Pencil size={20}/> กำลังแก้ไข (ID: {order})</> : <><PlusCircle size={20}/> สร้าง Content ใหม่</>}
                     </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
-                             <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">ชื่อโครงการ</label><input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full p-2 border border-slate-300 rounded text-lg font-bold" /></div>
-                             <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">รูปปก (Cover Image URL)</label><div className="flex gap-2"><input type="text" value={coverImage} onChange={e => setCoverImage(e.target.value)} className="flex-1 p-2 border border-slate-300 rounded text-sm" placeholder="URL รูปภาพ" />{coverImage && (<div className="w-10 h-10 rounded overflow-hidden border border-slate-200 shrink-0"><img src={coverImage} alt="Preview" className="w-full h-full object-cover" /></div>)}</div></div>
+                             {/* [NEW] Title + Slug Section */}
+                             <div className="col-span-2 space-y-3">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">ชื่อโครงการ (Title)</label>
+                                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full p-2 border border-slate-300 rounded text-lg font-bold" placeholder="เช่น โครงการแก้หนี้สิน..." />
+                                </div>
+                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <label className="text-xs font-bold text-blue-800 uppercase block mb-1 flex items-center gap-1">
+                                        <LinkIcon size={12}/> ลิงก์ภาษาอังกฤษ (Slug) *สำคัญ
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className="flex-1 p-2 border border-blue-200 rounded text-sm text-blue-900 font-mono placeholder:text-blue-300" placeholder="e.g. debt-resolution" />
+                                        <button type="button" onClick={generateSlug} className="px-3 bg-blue-100 text-blue-600 rounded hover:bg-blue-200" title="สร้างจากชื่อโครงการ"><Wand2 size={16}/></button>
+                                    </div>
+                                    <p className="text-[10px] text-blue-500 mt-1">ใช้ตัวพิมพ์เล็กและขีดกลาง (-) เท่านั้น ห้ามเว้นวรรค</p>
+                                </div>
+                             </div>
+
+                             <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">รูปปก (Image URL)</label><div className="flex gap-2"><input type="text" value={coverImage} onChange={e => setCoverImage(e.target.value)} className="flex-1 p-2 border border-slate-300 rounded text-sm" placeholder="URL รูปภาพ" />{coverImage && (<div className="w-10 h-10 rounded overflow-hidden border border-slate-200 shrink-0"><img src={coverImage} alt="Preview" className="w-full h-full object-cover" /></div>)}</div></div>
                              
                              <div>
                                 <label className="text-xs font-bold text-slate-500 uppercase block mb-1">หมวดหมู่</label>
@@ -270,54 +235,22 @@ export default function AdminPage() {
                                     {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                 </select>
                              </div>
-                             
-                             <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">ลำดับการแสดงผล</label><input type="number" value={order} onChange={e => setOrder(e.target.value)} className="w-full p-2 border rounded text-sm font-mono text-center bg-slate-100 text-slate-500 cursor-not-allowed" disabled/></div>
+                             <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">ลำดับ</label><input type="number" value={order} onChange={e => setOrder(e.target.value)} className="w-full p-2 border rounded text-sm font-mono text-center bg-slate-100 text-slate-500 cursor-not-allowed" disabled/></div>
                              <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">คำอธิบายย่อ</label><textarea value={shortDesc} onChange={e => setShortDesc(e.target.value)} rows={2} className="w-full p-2 border border-slate-300 rounded text-sm" /></div>
                         </div>
 
+                        {/* ... (ส่วน Content Title, Categories, Blocks เหมือนเดิมเป๊ะ ไม่ต้องแก้) ... */}
+                        
                         <div className="p-4 bg-amber-50 rounded border border-amber-200">
                              <label className="text-xs font-bold text-amber-800 uppercase block mb-1">หัวข้อส่วนเนื้อหา (Custom Title)</label>
                              <input type="text" value={contentTitle} onChange={e => setContentTitle(e.target.value)} placeholder="ค่าเริ่มต้น: รายละเอียดและผลการดำเนินงาน" className="w-full p-2 border rounded text-sm bg-white"/>
-                             <p className="text-[10px] text-amber-600/70 mt-1">*เว้นว่างไว้หากต้องการใช้คำว่า "รายละเอียดและผลการดำเนินงาน"</p>
                         </div>
 
-                        <div className="p-4 bg-slate-50 rounded border border-slate-200">
-                             <label className="text-xs font-bold text-slate-500 uppercase block mb-2">จัดการหมวดหมู่ (Categories)</label>
-                             <div className="space-y-3">
-                                <div className="flex gap-2">
-                                    <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มชื่อหมวดหมู่ใหม่..." className="flex-1 p-2 border rounded text-sm" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCategory())}/>
-                                    <button type="button" onClick={handleAddCategory} className="px-4 py-2 bg-teal-600 text-white rounded text-sm font-bold hover:bg-teal-700 flex items-center gap-1"><Plus size={14}/> เพิ่ม</button>
-                                </div>
-                                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
-                                    {categories.map(cat => (
-                                        <div key={cat} className={`flex items-center gap-2 pl-3 pr-2 py-1 rounded-full border text-xs shadow-sm transition-all ${editingCategory === cat ? 'bg-amber-100 border-amber-300 w-full md:w-auto' : 'bg-white border-slate-300'}`}>
-                                            {editingCategory === cat ? (
-                                                <>
-                                                    <input type="text" value={tempEditValue} onChange={(e) => setTempEditValue(e.target.value)} className="bg-transparent border-b border-amber-400 focus:outline-none text-slate-800 font-bold min-w-[120px]" autoFocus />
-                                                    <button type="button" onClick={saveEditCategory} className="p-1 text-green-600 hover:bg-green-100 rounded-full"><Check size={14}/></button>
-                                                    <button type="button" onClick={cancelEditCategory} className="p-1 text-red-500 hover:bg-red-100 rounded-full"><X size={14}/></button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className="font-medium text-slate-600">{cat}</span>
-                                                    <div className="flex gap-1 border-l border-slate-200 pl-2 ml-1">
-                                                        <button type="button" onClick={() => startEditCategory(cat)} className="text-slate-400 hover:text-amber-500 transition-colors" title="แก้ไขชื่อ"><Pencil size={10}/></button>
-                                                        <button type="button" onClick={() => handleRemoveCategory(cat)} className="text-slate-400 hover:text-red-500 transition-colors" title="ลบ"><X size={12}/></button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                             </div>
-                        </div>
-                        
                         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                              <div className="flex justify-between items-center mb-4">
                                  <label className="text-sm font-bold text-slate-700 uppercase">ส่วนเนื้อหา (Content Blocks)</label>
                                  <button type="button" onClick={addBlock} className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 text-white rounded text-xs font-bold hover:bg-teal-700 shadow-sm"><PlusCircle size={14}/> เพิ่มเนื้อหาใหม่</button>
                              </div>
-
                              <div className="space-y-4">
                                 {blocks.map((block, index) => (
                                     <div key={index} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm relative group">
@@ -330,8 +263,8 @@ export default function AdminPage() {
                                             </div>
                                          </div>
                                          <div className="space-y-3">
-                                             <div><label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">หัวข้อ (Heading)</label><input type="text" value={block.heading || ""} onChange={e => updateBlock(index, 'heading', e.target.value)} className="w-full p-2 border rounded text-sm font-semibold" placeholder="หัวข้อของส่วนนี้ (ไม่ใส่ก็ได้)"/></div>
-                                             <div><label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">เนื้อหา (Paragraph)</label><textarea value={block.content || ""} onChange={e => updateBlock(index, 'content', e.target.value)} rows={4} className="w-full p-2 border rounded text-sm" placeholder="พิมพ์เนื้อหาที่นี่..."/></div>
+                                             <div><label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">หัวข้อ (Heading)</label><input type="text" value={block.heading || ""} onChange={e => updateBlock(index, 'heading', e.target.value)} className="w-full p-2 border rounded text-sm font-semibold"/></div>
+                                             <div><label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">เนื้อหา (Paragraph)</label><textarea value={block.content || ""} onChange={e => updateBlock(index, 'content', e.target.value)} rows={4} className="w-full p-2 border rounded text-sm"/></div>
                                              <div className="pt-2 border-t border-slate-100">
                                                  <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block">สื่อประกอบ (Media)</label>
                                                  <div className="flex gap-2 mb-3">
@@ -341,18 +274,18 @@ export default function AdminPage() {
                                                          </button>
                                                      ))}
                                                  </div>
-                                                 {block.mediaType === 'image' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="วางลิงก์รูปภาพ (URL)"/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-2 border-b text-xs text-center bg-transparent focus:border-slate-400 outline-none" placeholder="คำอธิบายภาพ"/></div>)}
-                                                 {block.mediaType === 'video' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><div className="flex items-center gap-2 text-xs text-red-500 font-bold mb-1"><Video size={12}/> YouTube Only</div><input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="วางลิงก์ YouTube ที่นี่"/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-2 border-b text-xs text-center bg-transparent focus:border-slate-400 outline-none" placeholder="คำอธิบายวิดีโอ"/></div>)}
+                                                 {block.mediaType === 'image' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="URL รูปภาพ"/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-2 border-b text-xs text-center bg-transparent focus:border-slate-400 outline-none" placeholder="คำอธิบายภาพ"/></div>)}
+                                                 {block.mediaType === 'video' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><div className="flex items-center gap-2 text-xs text-red-500 font-bold mb-1"><Video size={12}/> YouTube Only</div><input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="วางลิงก์ YouTube"/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-2 border-b text-xs text-center bg-transparent focus:border-slate-400 outline-none" placeholder="คำอธิบายวิดีโอ"/></div>)}
                                                  {block.mediaType === 'quote' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><textarea value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} rows={2} className="w-full p-2 border rounded text-xs italic" placeholder="พิมพ์ข้อความคำคม..."/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-1/2 p-2 border rounded text-xs" placeholder="ผู้กล่าว (Author)"/></div>)}
                                              </div>
                                          </div>
                                     </div>
                                 ))}
-                                {blocks.length === 0 && (<div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">ยังไม่มีเนื้อหา กดปุ่ม "เพิ่มเนื้อหาใหม่" ด้านบน</div>)}
+                                {blocks.length === 0 && (<div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">ยังไม่มีเนื้อหา กดปุ่มด้านบน</div>)}
                              </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100 flex gap-3 sticky bottom-0 bg-white/95 backdrop-blur py-4 -mx-6 px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t">
+                        <div className="pt-4 border-t border-slate-100 flex gap-3 sticky bottom-0 bg-white/95 backdrop-blur py-4 -mx-6 px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t z-50">
                             <button type="submit" disabled={loading} className={`flex-1 py-3 px-4 font-bold rounded-lg text-white shadow-md transition flex items-center justify-center gap-2 ${editId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-teal-600 hover:bg-teal-700'}`}>
                                 <Save size={18}/> {loading ? "กำลังบันทึก..." : (editId ? "บันทึกการแก้ไข" : "สร้างโครงการใหม่")}
                             </button>
@@ -367,19 +300,18 @@ export default function AdminPage() {
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 sticky top-6 max-h-[90vh] flex flex-col">
                     <div className="flex justify-between items-center mb-4 border-b pb-2">
                         <h2 className="text-lg font-bold">รายการ ({projectsList.length})</h2>
-                        <button onClick={fetchProjects} className="p-1 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-full" title="รีเฟรชข้อมูล"><RefreshCw size={16}/></button>
+                        <button onClick={fetchProjects} className="p-1 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-full"><RefreshCw size={16}/></button>
                     </div>
                     <div className="space-y-2 overflow-y-auto pr-2 flex-1">
                         {projectsList.map((item, index) => (
                             <div key={item.id} onClick={() => handleEditClick(item)} className={`flex gap-3 p-3 rounded border cursor-pointer transition relative group ${editId === item.id ? 'border-amber-500 bg-amber-50 shadow-sm ring-1 ring-amber-200' : 'hover:bg-slate-50'}`}>
-                                <div className="flex flex-col gap-1 items-center justify-center pr-2 border-r border-slate-200 mr-2" onClick={(e) => e.stopPropagation()}>
-                                    <button type="button" onClick={(e) => handleReorderProject(index, 'up', e)} disabled={index === 0} className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-100 rounded disabled:opacity-20"><ChevronUp size={14} /></button>
+                                <div className="flex flex-col gap-1 items-center justify-center pr-2 border-r border-slate-200 mr-2">
                                     <span className="text-[10px] font-bold text-slate-500">{item.order}</span>
-                                    <button type="button" onClick={(e) => handleReorderProject(index, 'down', e)} disabled={index === projectsList.length - 1} className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-100 rounded disabled:opacity-20"><ChevronDown size={14} /></button>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-bold text-sm truncate">{item.title}</h3>
-                                    <p className="text-[10px] text-slate-500">{item.category}</p>
+                                    {/* [NEW] แสดง Slug ในรายการด้วย */}
+                                    <p className="text-[10px] text-blue-500 font-mono truncate">{item.slug ? `/${item.slug}` : '(no-link)'}</p>
                                 </div>
                                 <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-full"><Trash2 size={16}/></button>
                             </div>

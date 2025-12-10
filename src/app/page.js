@@ -341,7 +341,7 @@ export default function Home() {
                >
                  {/* Image Container */}
                  <div className="w-full md:w-1/2 relative group cursor-pointer overflow-hidden rounded-2xl">
-                     <Link href={`/project/${item.id}`}>
+                     <Link href={`/project/${item.slug || item.id}`}>
                          {/* [แก้ 4] ปรับสัดส่วนภาพให้เตี้ยลง (16/10 -> 16/9) และลดความโค้งมนเล็กน้อย (rounded-2xl) */}
                          <div className={`relative w-full aspect-[4/3] md:aspect-[16/9] rounded-2xl overflow-hidden shadow-lg transition-all duration-700 group-hover:shadow-xl group-hover:shadow-amber-500/20 bg-white border border-slate-200/50 group-hover:border-amber-400/50`}>
                              <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -364,7 +364,7 @@ export default function Home() {
                      <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-5 font-light">{item.shortDesc}</p>
                      
                      {/* [แก้ 9] ลดขนาดปุ่มอ่านรายละเอียด */}
-                     <Link href={`/project/${item.id}`} className="inline-flex items-center gap-2 text-amber-700 font-bold uppercase tracking-wide group/btn hover:text-amber-600 transition-colors duration-300 text-xs md:text-sm">
+                     <Link href={`/project/${item.slug || item.id}`} className="inline-flex items-center gap-2 text-amber-700 font-bold uppercase tracking-wide group/btn hover:text-amber-600 transition-colors duration-300 text-xs md:text-sm">
                         <span>อ่านรายละเอียด</span>
                         <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center group-hover/btn:bg-amber-500 group-hover/btn:text-white transition-all duration-300 transform group-hover/btn:translate-x-1">
                             <ArrowRight size={16} />
