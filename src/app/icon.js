@@ -16,7 +16,7 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: '20px',
+          fontSize: '24px',      // [ปรับ] เพิ่มขนาดให้ใหญ่ขึ้นอีกนิด (เดิม 20px)
           background: '#0d9488', // สีเขียว Teal
           width: '100%',
           height: '100%',
@@ -25,7 +25,7 @@ export default function Icon() {
           justifyContent: 'center',
           color: 'white',
           borderRadius: '50%',
-          fontWeight: 600,
+          fontWeight: 900,       // [ปรับ] เปลี่ยนเป็น 900 (หนาสุดๆ)
         }}
       >
         T
