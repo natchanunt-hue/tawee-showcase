@@ -185,43 +185,52 @@ const ZeroDetailModal = ({ item, onClose }) => {
     );
 };
 
-// --- Bio Section ---
+// --- Bio Section (UPDATED) ---
 const BioSection = () => {
     const [isOpen, setIsOpen] = useState(false);
+    
     return (
-      // [FIX] id="bio" เพื่อให้ Navigate ทำงาน + scroll-mt เพื่อกัน Navbar บัง
-      // [FIX] margin: mobile=mt-0 (ไม่ซ้อน), desktop=-mt-20 (ซ้อนสวย)
-      <section id="bio" className="container mx-auto px-4 md:px-8 relative z-40 mb-20 mt-0 md:-mt-20 scroll-mt-32">
+      <section id="bio" className="container mx-auto px-4 md:px-8 relative z-40 mb-20 mt-0 md:-mt-20 scroll-mt-24">
         <motion.div 
             initial={{ y: 20, opacity: 0 }} 
             whileInView={{ y: 0, opacity: 1 }} 
             viewport={{ once: true }} 
             className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 overflow-hidden max-w-4xl mx-auto"
         >
-          <div onClick={() => setIsOpen(!isOpen)} className="p-8 md:p-10 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 transition-colors gap-6 group">
-            <div className="flex items-center gap-6 text-center md:text-left">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500">
+          {/* Header Box */}
+          <div onClick={() => setIsOpen(!isOpen)} className="p-6 md:p-10 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 transition-colors gap-6 group">
+            <div className="flex items-center gap-5 text-center md:text-left w-full md:w-auto">
+                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 mx-auto md:mx-0">
                     <UserIcon />
                 </div>
-                <div>
-                    <h3 className="text-2xl font-bold text-slate-900 group-hover:text-amber-600 transition-colors">รู้จัก พ.ต.อ.ทวี สอดส่อง</h3>
-                    <p className="text-slate-500 font-light mt-1">เส้นทางชีวิตและความยุติธรรมที่จับต้องได้</p>
+                <div className="flex-1 text-left">
+                    <h3 className="text-xl md:text-2xl font-bold text-slate-900 group-hover:text-amber-600 transition-colors">รู้จัก พ.ต.อ.ทวี สอดส่อง</h3>
+                    <p className="text-sm md:text-base text-slate-500 font-light mt-1">เส้นทางชีวิตและความยุติธรรม</p>
                 </div>
             </div>
-            <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${isOpen ? 'bg-amber-500 border-amber-500 text-white rotate-180' : 'border-slate-200 text-slate-400 group-hover:border-amber-500 group-hover:text-amber-500'}`}><ChevronDown size={20}/></div>
+            <div className={`hidden md:flex w-10 h-10 rounded-full border items-center justify-center transition-all ${isOpen ? 'bg-amber-500 border-amber-500 text-white rotate-180' : 'border-slate-200 text-slate-400 group-hover:border-amber-500 group-hover:text-amber-500'}`}>
+                <ChevronDown size={20}/>
+            </div>
+            {/* Mobile Toggle Button (Visible underneath text on mobile) */}
+            <div className={`md:hidden w-full py-2 flex items-center justify-center gap-2 text-sm font-medium rounded-xl transition-colors ${isOpen ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-500'}`}>
+                {isOpen ? 'ซ่อนประวัติ' : 'ดูเส้นทางชีวิต'} <ChevronDown size={16} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}/>
+            </div>
           </div>
+
           <AnimatePresence>
             {isOpen && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.5, ease: "circOut" }}>
-                <div className="p-8 md:p-12 border-t border-slate-100 bg-slate-50/30">
-                  <div className="text-center max-w-2xl mx-auto mb-16 relative">
-                      <h4 className="text-xl md:text-3xl font-bold text-slate-800 mb-6 leading-relaxed relative z-10">{bioIntro.headline}</h4>
-                      <div className="w-24 h-1 bg-amber-400 mx-auto rounded-full mb-6"></div>
-                      <p className="text-slate-600 font-light leading-relaxed text-lg mb-8">{bioIntro.philosophy}</p>
+                <div className="p-6 md:p-12 border-t border-slate-100 bg-slate-50/30">
+                  
+                  {/* Bio Intro Text */}
+                  <div className="text-center max-w-2xl mx-auto mb-12 relative">
+                      <h4 className="text-lg md:text-3xl font-bold text-slate-800 mb-4 leading-relaxed relative z-10">{bioIntro.headline}</h4>
+                      <div className="w-16 h-1 bg-amber-400 mx-auto rounded-full mb-6"></div>
+                      <p className="text-slate-600 font-light leading-relaxed text-base md:text-lg mb-8 px-2">{bioIntro.philosophy}</p>
                       
-                      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 relative overflow-hidden">
+                      <div className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-100 relative overflow-hidden mx-2 md:mx-0">
                           <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
-                          <p className="text-slate-800 font-bold text-lg md:text-xl tracking-wide leading-relaxed whitespace-pre-line relative z-10">
+                          <p className="text-slate-800 font-bold text-base md:text-xl tracking-wide leading-relaxed whitespace-pre-line relative z-10 text-left pl-2">
                               {bioIntro.careerHighlight}
                           </p>
                       </div>
