@@ -5,35 +5,67 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, orderBy, query,
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Kanit } from "next/font/google";
+// --- Custom Layout Icons (ไอคอนที่วาดเองให้เห็นภาพชัดเจน) ---
+
+// 1. ไอคอน: รูปซ้าย / เนื้อหาขวา
+const IconPicLeft = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current">
+    <rect x="3" y="4" width="8" height="16" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" /> {/* กล่องรูป (ซ้าย) */}
+    <path d="M14 6H21" strokeWidth="1.5" strokeLinecap="round"/> {/* เส้นข้อความ (ขวา) */}
+    <path d="M14 10H21" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M14 14H19" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+// 2. ไอคอน: รูปบน / เนื้อหากลาง (Stack)
+const IconPicTop = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current">
+    <rect x="4" y="3" width="16" height="10" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" /> {/* กล่องรูป (บน) */}
+    <path d="M4 17H20" strokeWidth="1.5" strokeLinecap="round"/> {/* เส้นข้อความ (ล่าง) */}
+    <path d="M4 21H16" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+// 3. ไอคอน: รูปขวา / เนื้อหาซ้าย
+const IconPicRight = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current">
+    <rect x="13" y="4" width="8" height="16" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" /> {/* กล่องรูป (ขวา) */}
+    <path d="M3 6H10" strokeWidth="1.5" strokeLinecap="round"/> {/* เส้นข้อความ (ซ้าย) */}
+    <path d="M3 10H10" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M3 14H8" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
 import { 
   Pencil, Trash2, LogOut, PlusCircle, 
   Image as ImageIcon, Video, Quote,
-  ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, Link as LinkIcon, Wand2, Eye, EyeOff
+  ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, 
+  Link as LinkIcon, Wand2, Eye, EyeOff,
+  AlignLeft, AlignRight, AlignCenter, LayoutTemplate, 
+  Bold, Italic, Layers, Settings, ExternalLink, GripVertical, Minus
 } from "lucide-react";
 
-const kanit = Kanit({ subsets: ["thai"], weight: ["300", "400", "600"] });
+const kanit = Kanit({ subsets: ["thai"], weight: ["300", "400", "500", "600"] });
 
 export default function AdminPage() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   
-  // State หลัก
+  // --- Main State ---
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [category, setCategory] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [order, setOrder] = useState(0); 
-  const [contentTitle, setContentTitle] = useState(""); 
-  // [NEW] State สำหรับสถานะ Published ของโปรเจ็ค (Default = true ตามที่ขอ)
   const [isPublished, setIsPublished] = useState(true);
 
-  // State จัดการหมวดหมู่
+  // --- Category State ---
   const [categories, setCategories] = useState(["Human Rights", "Economic Justice", "Law Enforcement", "Land Rights"]);
   const [newCategory, setNewCategory] = useState("");
   const [editingCategory, setEditingCategory] = useState(null); 
   const [tempEditValue, setTempEditValue] = useState(""); 
 
+  // --- Data & Loading ---
   const [blocks, setBlocks] = useState([]); 
   const [projectsList, setProjectsList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,75 +85,75 @@ export default function AdminPage() {
         const querySnapshot = await getDocs(q);
         const items = [];
         const foundCategories = new Set(categories); 
-
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             items.push({ id: doc.id, ...data });
             if(data.category) foundCategories.add(data.category);
         });
-        
         setProjectsList(items);
         setCategories(Array.from(foundCategories));
-
-        if (!editId && items.length > 0) {
-            const maxOrder = Math.max(...items.map(i => i.order || 0));
-            setOrder(maxOrder + 1);
+        
+        if (!editId) {
+             const maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order || 0)) : 0;
+             setOrder(maxOrder + 1);
         }
     } catch (error) { console.error("Error:", error); }
   };
 
-  // --- Functions จัดการหมวดหมู่ ---
-  const handleAddCategory = () => {
-      if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-          setCategories([...categories, newCategory.trim()]);
-          setNewCategory("");
-      }
-  };
-
-  const handleRemoveCategory = (catToRemove) => {
-      if (confirm(`ต้องการลบหมวดหมู่ "${catToRemove}" หรือไม่?`)) {
-          setCategories(categories.filter(cat => cat !== catToRemove));
-          if (category === catToRemove) setCategory("");
-      }
-  };
-
-  const startEditCategory = (cat) => { setEditingCategory(cat); setTempEditValue(cat); };
-  const cancelEditCategory = () => { setEditingCategory(null); setTempEditValue(""); };
-
-  const saveEditCategory = async () => {
-      if (!tempEditValue.trim() || tempEditValue === editingCategory) { cancelEditCategory(); return; }
-      if (categories.includes(tempEditValue)) { alert("ชื่อหมวดหมู่นี้มีอยู่แล้ว"); return; }
-      const oldName = editingCategory;
-      const newName = tempEditValue.trim();
-      if (!confirm(`เปลี่ยนชื่อหมวดหมู่จาก "${oldName}" เป็น "${newName}"?`)) return;
-      setLoading(true);
-      try {
-          const q = query(collection(db, "projects"), where("category", "==", oldName));
-          const querySnapshot = await getDocs(q);
-          const batch = writeBatch(db);
-          querySnapshot.forEach((doc) => { batch.update(doc.ref, { category: newName }); });
-          await batch.commit();
-          const newCategories = categories.map(cat => cat === oldName ? newName : cat);
-          setCategories(newCategories);
-          if (category === oldName) setCategory(newName);
-          fetchProjects(); 
-      } catch (error) { console.error(error); } finally { setLoading(false); cancelEditCategory(); }
-  };
-
-  // --- Helper: Generate Slug ---
+  // --- Helper: Generate Slug (แบบคลีน เน้นแชร์สวย English/Number Only) ---
   const generateSlug = () => {
-      if (!title) return;
-      const newSlug = title.toLowerCase()
-          .replace(/[^\w\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/^-+|-+$/g, '');
-      setSlug(newSlug);
-  }
+      if (!title) {
+          alert("กรุณากรอกชื่อโครงการก่อนครับ");
+          return;
+      }
+      
+      // 1. ลองดึงเฉพาะ A-Z และ 0-9 ออกมา
+      let newSlug = title.toString()
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, '-')               // เปลี่ยนช่องว่างเป็นขีด
+          .replace(/[^a-z0-9-]/g, '')         // ** ลบภาษาไทยและอักขระพิเศษทิ้งหมด **
+          .replace(/-+/g, '-')                // ลบขีดซ้ำ
+          .replace(/^-+|-+$/g, '');           // ลบขีดหน้าหลัง
 
-  // --- Block Logic ---
-  const addBlock = () => setBlocks([...blocks, { heading: "", content: "", mediaType: "none", mediaSrc: "", caption: "", published: true }]);
-  const updateBlock = (index, field, value) => { const newBlocks = [...blocks]; newBlocks[index][field] = value; setBlocks(newBlocks); };
-  const removeBlock = (index) => { if(!confirm("ลบส่วนเนื้อหานี้?")) return; setBlocks(blocks.filter((_, i) => i !== index)); };
+      // 2. ถ้าผลลัพธ์มันว่างเปล่า (เพราะชื่อเป็นไทยล้วน) หรือสั้นเกินไป
+      if (!newSlug || newSlug.length < 3) {
+          // สร้างรหัสสุ่มให้แทน (เช่น project-2025-x94) เพื่อให้แชร์แล้วสวย
+          const randomId = Math.floor(Math.random() * 1000);
+          const year = new Date().getFullYear();
+          newSlug = `project-${year}-${randomId}`;
+      }
+
+      setSlug(newSlug);
+  };
+
+  const normalizeBlock = (block) => {
+      return {
+          layout: block.layout || 'left', 
+          heading: block.heading || "", 
+          content: block.content || "", 
+          textStyle: block.textStyle || (block.mediaType === 'quote' ? 'quote' : 'normal'),
+          mediaType: (block.mediaType === 'quote' ? 'none' : block.mediaType) || 'image',
+          mediaSrc: block.mediaSrc || "", 
+          caption: block.caption || "", 
+          actionUrl: block.actionUrl || "",
+          published: block.published !== false,
+          hasDivider: block.hasDivider || false
+      };
+  };
+
+  const addBlock = () => {
+      setBlocks([...blocks, normalizeBlock({ layout: 'left', mediaType: 'image' })]);
+  };
+
+  const updateBlock = (index, field, value) => { 
+      const newBlocks = [...blocks]; 
+      newBlocks[index][field] = value; 
+      setBlocks(newBlocks); 
+  };
+
+  const removeBlock = (index) => { if(confirm("ลบ Block นี้?")) setBlocks(blocks.filter((_, i) => i !== index)); };
+  
   const moveBlock = (index, direction) => {
     if ((direction === 'up' && index === 0) || (direction === 'down' && index === blocks.length - 1)) return;
     const newBlocks = [...blocks];
@@ -130,268 +162,337 @@ export default function AdminPage() {
     setBlocks(newBlocks);
   };
 
-  // --- Handle Submit ---
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const rawPayload = {
-        title, 
-        slug: slug || "", 
-        category, shortDesc, image: coverImage, 
-        order: Number(order) || 0, 
-        contentTitle: contentTitle || "", 
-        published: isPublished, // [NEW] บันทึกสถานะ Published
-        contentBlocks: blocks, updatedAt: new Date(),
-    };
-    const payload = JSON.parse(JSON.stringify(rawPayload));
-
-    try {
-      if (editId) {
-        await updateDoc(doc(db, "projects", editId), payload);
-        alert("บันทึกเรียบร้อย!");
-      } else {
-        await addDoc(collection(db, "projects"), { ...payload, createdAt: new Date() });
-        alert("สร้างโครงการเรียบร้อย!");
-      }
-      resetForm(); fetchProjects();
-    } catch (error) { console.error(error); alert("เกิดข้อผิดพลาด: " + error.message); } 
-    finally { setLoading(false); }
+  const insertHtmlTag = (index, tagType) => {
+      const textarea = document.getElementById(`editor-${index}`);
+      if (!textarea) return;
+      const start = textarea.selectionStart; const end = textarea.selectionEnd;
+      const text = blocks[index].content || "";
+      const selectedText = text.substring(start, end);
+      let insertion = "";
+      if (tagType === 'bold') insertion = `<b>${selectedText || 'ตัวหนา'}</b>`;
+      else if (tagType === 'italic') insertion = `<i>${selectedText || 'ตัวเอียง'}</i>`;
+      else if (tagType === 'link') { const url = prompt("ใส่ URL:", "https://"); if(url) insertion = `<a href="${url}" target="_blank" class="text-amber-600 underline">${selectedText || 'ลิงก์'}</a>`; else return; }
+      updateBlock(index, 'content', text.substring(0, start) + insertion + text.substring(end));
   };
 
-  // --- Handle Delete & Reorder ---
-  const handleDelete = async (id) => {
-      if(!confirm("ยืนยันการลบ?")) return;
-      try { await deleteDoc(doc(db, "projects", id)); if (editId === id) resetForm(); fetchProjects(); } catch (error) { console.error(error); }
-  }
+  // --- Category Logic ---
+  const handleAddCategory = () => { if (newCategory.trim() && !categories.includes(newCategory.trim())) { setCategories([...categories, newCategory.trim()]); setNewCategory(""); }};
+  const handleRemoveCategory = (cat) => { if (confirm(`ลบหมวดหมู่ "${cat}"?`)) setCategories(categories.filter(c => c !== cat)); };
+  const startEditCategory = (cat) => { setEditingCategory(cat); setTempEditValue(cat); };
+  const saveEditCategory = async () => {
+      if (!tempEditValue.trim() || tempEditValue === editingCategory) { setEditingCategory(null); return; }
+      const oldName = editingCategory; const newName = tempEditValue.trim();
+      if (!confirm(`เปลี่ยนชื่อ "${oldName}" เป็น "${newName}" ในทุกโปรเจกต์?`)) return;
+      setLoading(true);
+      try {
+          const q = query(collection(db, "projects"), where("category", "==", oldName));
+          const querySnapshot = await getDocs(q);
+          const batch = writeBatch(db);
+          querySnapshot.forEach((doc) => { batch.update(doc.ref, { category: newName }); });
+          await batch.commit();
+          setCategories(categories.map(c => c === oldName ? newName : c));
+          if (category === oldName) setCategory(newName);
+          fetchProjects();
+      } catch (error) { console.error(error); } finally { setLoading(false); setEditingCategory(null); }
+  };
+
+  // --- Project Reorder Logic ---
   const handleReorderProject = async (index, direction, e) => {
     e.stopPropagation();
     if (direction === 'up' && index === 0) return; if (direction === 'down' && index === projectsList.length - 1) return;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     const currentItem = projectsList[index]; const targetItem = projectsList[targetIndex];
-    try { const batch = writeBatch(db); batch.update(doc(db, "projects", currentItem.id), { order: targetItem.order }); batch.update(doc(db, "projects", targetItem.id), { order: currentItem.order }); await batch.commit(); fetchProjects(); } catch (error) { console.error(error); }
+    try { 
+        const batch = writeBatch(db); 
+        batch.update(doc(db, "projects", currentItem.id), { order: targetItem.order }); 
+        batch.update(doc(db, "projects", targetItem.id), { order: currentItem.order }); 
+        await batch.commit(); fetchProjects(); 
+    } catch (error) { console.error(error); }
   };
 
-  // --- Handle Edit Click ---
+  const handleSubmit = async (e) => {
+    e.preventDefault(); setLoading(true);
+    const rawPayload = { title, slug: slug || "", category, shortDesc, image: coverImage, order: Number(order) || 0, published: isPublished, contentBlocks: blocks, updatedAt: new Date() };
+    try {
+      if (editId) { await updateDoc(doc(db, "projects", editId), rawPayload); alert("บันทึกแล้ว!"); } 
+      else { await addDoc(collection(db, "projects"), { ...rawPayload, createdAt: new Date() }); alert("สร้างใหม่แล้ว!"); }
+      resetForm(); fetchProjects();
+    } catch (error) { console.error(error); alert("Error: " + error.message); } finally { setLoading(false); }
+  };
+
   const handleEditClick = (item) => {
-      setEditId(item.id); setTitle(item.title); 
-      setSlug(item.slug || ""); 
+      setEditId(item.id); setTitle(item.title); setSlug(item.slug || ""); 
       setCategory(item.category); setShortDesc(item.shortDesc); setCoverImage(item.image);
-      setOrder(item.order || 0); setContentTitle(item.contentTitle || "");
-      // [NEW] โหลดค่าสถานะ Published ถ้าไม่มีให้เป็น true
-      setIsPublished(item.published !== false);
-      if (item.contentBlocks && Array.isArray(item.contentBlocks)) setBlocks(item.contentBlocks); else setBlocks([]);
+      setOrder(item.order || 0); setIsPublished(item.published !== false);
+      setBlocks((item.contentBlocks || []).map(normalizeBlock));
       window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-
-  const resetForm = () => {
-      setEditId(null); setTitle(""); setSlug(""); setCategory(""); setShortDesc(""); setCoverImage(""); 
-      const maxOrder = projectsList.length > 0 ? Math.max(...projectsList.map(i => i.order || 0)) : 0;
-      setOrder(maxOrder + 1); setContentTitle(""); setBlocks([]);
-      setIsPublished(true); // [NEW] Reset เป็น Published
-  }
-
-  const handleLogout = () => { signOut(auth); router.push("/login"); }
+  const handleDeleteProject = async (id) => { if(!confirm("ยืนยันลบ?")) return; await deleteDoc(doc(db, "projects", id)); if(editId === id) resetForm(); fetchProjects(); }
+  const resetForm = () => { setEditId(null); setTitle(""); setSlug(""); setCategory(""); setShortDesc(""); setCoverImage(""); setOrder(projectsList.length > 0 ? Math.max(...projectsList.map(i => i.order || 0)) + 1 : 1); setBlocks([]); setIsPublished(true); }
 
   if (!isAuthorized) return null;
 
   return (
-    <div className={`min-h-screen bg-slate-100 p-6 md:p-10 text-slate-800 ${kanit.className}`}>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">Admin Panel</h1>
-            <div className="flex gap-2"><button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded transition border border-red-200"><LogOut size={16}/> ออกจากระบบ</button></div>
+    <div className={`min-h-screen bg-slate-100 text-slate-800 ${kanit.className} flex flex-col md:flex-row`}>
+      {/* SIDEBAR */}
+      <div className="w-full md:w-72 bg-white border-r border-slate-200 h-auto md:h-screen sticky top-0 overflow-y-auto flex flex-col z-20 shadow-xl">
+        <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+             <h1 className="font-bold text-slate-700 flex items-center gap-2"><Settings size={18}/> Admin</h1>
+             <button onClick={() => {signOut(auth); router.push("/login");}} className="text-red-500 bg-red-50 p-1.5 rounded"><LogOut size={16}/></button>
+        </div>
+        <div className="p-4 border-b border-slate-100">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1"><Layers size={10}/> หมวดหมู่ (Categories)</h3>
+            <div className="flex gap-1 mb-2">
+                <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่ม..." className="flex-1 text-xs p-1.5 border rounded"/>
+                <button onClick={handleAddCategory} className="bg-slate-800 text-white px-2 rounded text-xs"><Plus size={14}/></button>
+            </div>
+            <div className="flex flex-wrap gap-1">
+                {categories.map(cat => (
+                    <div key={cat} className={`text-[10px] px-2 py-1 rounded border flex items-center gap-1 ${editingCategory===cat ? 'bg-amber-100 border-amber-300' : 'bg-slate-50'}`}>
+                        {editingCategory === cat ? (
+                            <>
+                                <input value={tempEditValue} onChange={e => setTempEditValue(e.target.value)} className="w-16 bg-transparent outline-none" autoFocus/>
+                                <button onClick={saveEditCategory} className="text-green-600 font-bold">✓</button>
+                                <button onClick={() => setEditingCategory(null)} className="text-red-500">✕</button>
+                            </>
+                        ) : (
+                            <>
+                                <span onClick={() => setCategory(cat)} className="cursor-pointer">{cat}</span>
+                                <button onClick={() => startEditCategory(cat)} className="text-slate-400 hover:text-amber-500"><Pencil size={8}/></button>
+                                <button onClick={() => handleRemoveCategory(cat)} className="text-slate-400 hover:text-red-500"><X size={8}/></button>
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+        <div className="flex-1 p-4 flex flex-col min-h-0">
+            <h3 className="text-xs font-bold text-slate-400 uppercase">Projects ({projectsList.length})</h3>
+            <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                {projectsList.map((item, idx) => (
+                    <div key={item.id} onClick={() => handleEditClick(item)} className={`p-2 rounded border flex gap-2 items-center cursor-pointer hover:bg-slate-50 group ${editId === item.id ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-100 bg-white'}`}>
+                        <div className="flex flex-col gap-0.5 opacity-50 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
+                            <button onClick={e => handleReorderProject(idx, 'up', e)} disabled={idx===0} className="hover:text-amber-600 disabled:opacity-20"><ChevronUp size={12}/></button>
+                            <button onClick={e => handleReorderProject(idx, 'down', e)} disabled={idx===projectsList.length-1} className="hover:text-amber-600 disabled:opacity-20"><ChevronDown size={12}/></button>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="font-bold text-xs truncate">{item.title}</div>
+                            <div className="flex gap-2 text-[9px] text-slate-400"><span>{item.category}</span><span className={item.published ? 'text-green-500' : 'text-slate-300'}>{item.published ? 'Live' : 'Draft'}</span></div>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(item.id); }} className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500"><Trash2 size={12}/></button>
+                    </div>
+                ))}
+            </div>
+        </div>
+      </div>
+
+      {/* --- MAIN CANVAS (Right) --- */}
+<div className="flex-1 p-4 md:p-8 h-screen overflow-y-auto bg-slate-100">
+    <div className="max-w-4xl mx-auto pb-20">
+        
+        {/* [แก้ไข] Form Header: เพิ่มปุ่ม Cancel ตรงหัวข้อ */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+            <div>
+                <div className="flex items-center gap-3">
+                    <h2 className={`text-2xl font-bold flex items-center gap-2 ${editId ? 'text-amber-600' : 'text-slate-800'}`}>
+                        {editId ? (
+                            <>
+                                <Pencil size={24}/> กำลังแก้ไข (Editing)
+                            </>
+                        ) : (
+                            <>
+                                <PlusCircle size={24}/> สร้างโปรเจกต์ใหม่
+                            </>
+                        )}
+                    </h2>
+
+                    {/* [NEW] ปุ่มกากบาท (Close) สำหรับยกเลิกการแก้ไข */}
+                    {editId && (
+                        <button 
+                            onClick={resetForm}
+                            className="group flex items-center gap-1 text-xs font-bold bg-red-50 text-red-500 px-3 py-1.5 rounded-full border border-red-100 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                            title="ยกเลิกการเลือก / กลับไปหน้าสร้างใหม่"
+                        >
+                            <X size={14} className="group-hover:rotate-90 transition-transform"/> 
+                            ยกเลิก (Close)
+                        </button>
+                    )}
+                </div>
+                <p className="text-xs text-slate-500 mt-1 ml-1">
+                    ลำดับ (Order ID): <span className="font-mono font-bold">{order}</span>
+                </p>
+            </div>
+
+            {/* ปุ่ม Save / Published ด้านขวา (เหมือนเดิม) */}
+            <div className="flex gap-2 w-full md:w-auto">
+                <button type="button" onClick={() => setIsPublished(!isPublished)} className={`flex-1 md:flex-none flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-bold border ${isPublished ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-300'}`}>
+                    {isPublished ? <><Eye size={14}/> Live</> : <><EyeOff size={14}/> Hidden</>}
+                </button>
+                <button onClick={handleSubmit} disabled={loading} className={`flex-1 md:flex-none px-6 py-2 rounded text-white font-bold text-sm shadow flex items-center justify-center gap-2 ${editId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-900 hover:bg-slate-800'}`}>
+                    <Save size={16}/> {loading ? 'Saving...' : (editId ? 'บันทึกแก้ไข' : 'สร้างใหม่')}
+                </button>
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Form Section */}
-            <div className="lg:col-span-7">
-                <div className={`bg-white p-6 rounded-xl shadow-lg border transition-colors ${editId ? 'border-amber-400' : 'border-slate-200'}`}>
-                    <div className="flex justify-between items-start mb-6 pb-4 border-b">
-                        <h2 className={`text-lg font-bold flex items-center gap-2 ${editId ? 'text-amber-600' : 'text-teal-600'}`}>
-                            {editId ? <><Pencil size={20}/> กำลังแก้ไข (ID: {order})</> : <><PlusCircle size={20}/> สร้าง Content ใหม่</>}
-                        </h2>
-                        
-                        {/* [NEW] ปุ่ม Toggle Status สำหรับ Project หลัก */}
-                        <button 
-                            type="button"
-                            onClick={() => setIsPublished(!isPublished)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                                isPublished 
-                                ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' 
-                                : 'bg-gray-100 text-gray-500 border-gray-300 hover:bg-gray-200'
-                            }`}
-                        >
-                            {isPublished ? <><Eye size={14}/> Published (แสดงผล)</> : <><EyeOff size={14}/> Draft (ซ่อนไว้)</>}
-                        </button>
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3 mb-6">
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full text-lg font-bold border-b border-slate-200 focus:border-slate-800 outline-none py-1" placeholder="ชื่อโครงการ (Title)..."/>
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 p-2 rounded border border-slate-100 flex items-center gap-2">
+                        <LinkIcon size={12} className="text-slate-400"/>
+                        <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className="bg-transparent text-xs w-full outline-none" placeholder="url-slug"/>
+                        {/* [FIXED] ปุ่ม Magic Wand เรียกใช้ generateSlug ที่แก้แล้ว */}
+                        <button onClick={generateSlug} type="button" className="text-xs text-blue-500 hover:bg-blue-100 p-1 rounded" title="สร้าง Slug อัตโนมัติ (รองรับไทย)"><Wand2 size={12}/></button>
                     </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                             {/* Title + Slug Section */}
-                             <div className="col-span-2 space-y-3">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">ชื่อโครงการ (Title)</label>
-                                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full p-2 border border-slate-300 rounded text-lg font-bold" placeholder="เช่น โครงการแก้หนี้สิน..." />
+                    
+                    <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                        <div className="flex items-center gap-2">
+                            <ImageIcon size={12} className="text-slate-400"/>
+                            <input type="text" value={coverImage} onChange={e => setCoverImage(e.target.value)} className="bg-transparent text-xs w-full outline-none" placeholder="Cover Image URL"/>
+                        </div>
+                        {coverImage && (
+                            <div className="relative w-full h-24 rounded overflow-hidden border border-slate-200 mt-2 group">
+                                <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-white text-xs font-bold">Cover Preview</span>
                                 </div>
-                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                    <label className="text-xs font-bold text-blue-800 uppercase block mb-1 flex items-center gap-1">
-                                        <LinkIcon size={12}/> ลิงก์ภาษาอังกฤษ (Slug) *สำคัญ
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className="flex-1 p-2 border border-blue-200 rounded text-sm text-blue-900 font-mono placeholder:text-blue-300" placeholder="e.g. debt-resolution" />
-                                        <button type="button" onClick={generateSlug} className="px-3 bg-blue-100 text-blue-600 rounded hover:bg-blue-200" title="สร้างจากชื่อโครงการ"><Wand2 size={16}/></button>
-                                    </div>
-                                    <p className="text-[10px] text-blue-500 mt-1">ใช้ตัวพิมพ์เล็กและขีดกลาง (-) เท่านั้น ห้ามเว้นวรรค</p>
-                                </div>
-                             </div>
-
-                             <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">รูปปก (Image URL)</label><div className="flex gap-2"><input type="text" value={coverImage} onChange={e => setCoverImage(e.target.value)} className="flex-1 p-2 border border-slate-300 rounded text-sm" placeholder="URL รูปภาพ" />{coverImage && (<div className="w-10 h-10 rounded overflow-hidden border border-slate-200 shrink-0"><img src={coverImage} alt="Preview" className="w-full h-full object-cover" /></div>)}</div></div>
-                             
-                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">หมวดหมู่</label>
-                                <select value={category} onChange={e => setCategory(e.target.value)} required className="w-full p-2 border rounded text-sm bg-white">
-                                    <option value="">-- เลือกหมวดหมู่ --</option>
-                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
-                             </div>
-                             <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">ลำดับ</label><input type="number" value={order} onChange={e => setOrder(e.target.value)} className="w-full p-2 border rounded text-sm font-mono text-center bg-slate-100 text-slate-500 cursor-not-allowed" disabled/></div>
-                             <div className="col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">คำอธิบายย่อ</label><textarea value={shortDesc} onChange={e => setShortDesc(e.target.value)} rows={2} className="w-full p-2 border border-slate-300 rounded text-sm" /></div>
-                        </div>
-
-                        <div className="p-4 bg-amber-50 rounded border border-amber-200">
-                             <label className="text-xs font-bold text-amber-800 uppercase block mb-1">หัวข้อส่วนเนื้อหา (Custom Title)</label>
-                             <input type="text" value={contentTitle} onChange={e => setContentTitle(e.target.value)} placeholder="ค่าเริ่มต้น: รายละเอียดและผลการดำเนินงาน" className="w-full p-2 border rounded text-sm bg-white"/>
-                        </div>
-
-                        {/* --- ส่วนจัดการหมวดหมู่ --- */}
-                        <div className="p-4 bg-slate-50 rounded border border-slate-200">
-                             <label className="text-xs font-bold text-slate-500 uppercase block mb-2">จัดการหมวดหมู่ (Categories)</label>
-                             <div className="space-y-3">
-                                <div className="flex gap-2">
-                                    <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มชื่อหมวดหมู่ใหม่..." className="flex-1 p-2 border rounded text-sm" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCategory())}/>
-                                    <button type="button" onClick={handleAddCategory} className="px-4 py-2 bg-teal-600 text-white rounded text-sm font-bold hover:bg-teal-700 flex items-center gap-1"><Plus size={14}/> เพิ่ม</button>
-                                </div>
-                                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
-                                    {categories.map(cat => (
-                                        <div key={cat} className={`flex items-center gap-2 pl-3 pr-2 py-1 rounded-full border text-xs shadow-sm transition-all ${editingCategory === cat ? 'bg-amber-100 border-amber-300 w-full md:w-auto' : 'bg-white border-slate-300'}`}>
-                                            {editingCategory === cat ? (
-                                                <>
-                                                    <input type="text" value={tempEditValue} onChange={(e) => setTempEditValue(e.target.value)} className="bg-transparent border-b border-amber-400 focus:outline-none text-slate-800 font-bold min-w-[120px]" autoFocus />
-                                                    <button type="button" onClick={saveEditCategory} className="p-1 text-green-600 hover:bg-green-100 rounded-full"><Check size={14}/></button>
-                                                    <button type="button" onClick={cancelEditCategory} className="p-1 text-red-500 hover:bg-red-100 rounded-full"><X size={14}/></button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className="font-medium text-slate-600">{cat}</span>
-                                                    <div className="flex gap-1 border-l border-slate-200 pl-2 ml-1">
-                                                        <button type="button" onClick={() => startEditCategory(cat)} className="text-slate-400 hover:text-amber-500 transition-colors" title="แก้ไขชื่อ"><Pencil size={10}/></button>
-                                                        <button type="button" onClick={() => handleRemoveCategory(cat)} className="text-slate-400 hover:text-red-500 transition-colors" title="ลบ"><X size={12}/></button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                             </div>
-                        </div>
-
-                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                             <div className="flex justify-between items-center mb-4">
-                                 <label className="text-sm font-bold text-slate-700 uppercase">ส่วนเนื้อหา (Content Blocks)</label>
-                                 <button type="button" onClick={addBlock} className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 text-white rounded text-xs font-bold hover:bg-teal-700 shadow-sm"><PlusCircle size={14}/> เพิ่มเนื้อหาใหม่</button>
-                             </div>
-                             <div className="space-y-4">
-                                {blocks.map((block, index) => (
-                                    <div key={index} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm relative group">
-                                         <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Block {index + 1}</span>
-                                                <button type="button" onClick={() => updateBlock(index, 'published', !block.published)} className={`text-xs px-2 py-0.5 rounded font-bold transition-colors ${block.published ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600 opacity-60'}`}>
-                                                    {block.published ? '✓ แสดง' : '○ Draft'}
-                                                </button>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <button type="button" onClick={() => moveBlock(index, 'up')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600" disabled={index===0}><ArrowUp size={14}/></button>
-                                                <button type="button" onClick={() => moveBlock(index, 'down')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600" disabled={index===blocks.length-1}><ArrowDown size={14}/></button>
-                                                <button type="button" onClick={() => removeBlock(index)} className="p-1 text-red-300 hover:text-red-500 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
-                                            </div>
-                                         </div>
-                                         <div className="space-y-3">
-                                             <div><label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">หัวข้อ (Heading)</label><input type="text" value={block.heading || ""} onChange={e => updateBlock(index, 'heading', e.target.value)} className="w-full p-2 border rounded text-sm font-semibold"/></div>
-                                             <div><label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">เนื้อหา (Paragraph)</label><textarea value={block.content || ""} onChange={e => updateBlock(index, 'content', e.target.value)} rows={4} className="w-full p-2 border rounded text-sm"/></div>
-                                             <div className="pt-2 border-t border-slate-100">
-                                                 <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block">สื่อประกอบ (Media)</label>
-                                                 <div className="flex gap-2 mb-3">
-                                                     {['none', 'image', 'video', 'quote'].map(type => (
-                                                         <button key={type} type="button" onClick={() => updateBlock(index, 'mediaType', type)} className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded border transition-colors ${block.mediaType === type ? 'bg-amber-50 border-amber-500 text-amber-700 font-bold' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>
-                                                             {type === 'none' && 'ไม่มี'} {type === 'image' && <><ImageIcon size={12}/> รูปภาพ</>} {type === 'video' && <><Video size={12}/> วิดีโอ</>} {type === 'quote' && <><Quote size={12}/> คำคม</>}
-                                                         </button>
-                                                     ))}
-                                                 </div>
-                                                 {block.mediaType === 'image' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="URL รูปภาพ"/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-2 border-b text-xs text-center bg-transparent focus:border-slate-400 outline-none" placeholder="คำอธิบายภาพ"/></div>)}
-                                                 {block.mediaType === 'video' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><div className="flex items-center gap-2 text-xs text-red-500 font-bold mb-1"><Video size={12}/> YouTube Only</div><input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="วางลิงก์ YouTube"/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-2 border-b text-xs text-center bg-transparent focus:border-slate-400 outline-none" placeholder="คำอธิบายวิดีโอ"/></div>)}
-                                                 {block.mediaType === 'quote' && (<div className="space-y-2 bg-slate-50 p-2 rounded border border-slate-200"><textarea value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} rows={2} className="w-full p-2 border rounded text-xs italic" placeholder="พิมพ์ข้อความคำคม..."/><input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-1/2 p-2 border rounded text-xs" placeholder="ผู้กล่าว (Author)"/></div>)}
-                                             </div>
-                                         </div>
-                                    </div>
-                                ))}
-                                {blocks.length === 0 && (<div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">ยังไม่มีเนื้อหา กดปุ่มด้านบน</div>)}
-                             </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-100 flex gap-3 sticky bottom-0 bg-white/95 backdrop-blur py-4 -mx-6 px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t z-50">
-                            <button type="submit" disabled={loading} className={`flex-1 py-3 px-4 font-bold rounded-lg text-white shadow-md transition flex items-center justify-center gap-2 ${editId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-teal-600 hover:bg-teal-700'}`}>
-                                <Save size={18}/> {loading ? "กำลังบันทึก..." : (editId ? "บันทึกการแก้ไข" : "สร้างโครงการใหม่")}
-                            </button>
-                            {editId && <button type="button" onClick={resetForm} className="px-6 border rounded-lg text-slate-500 hover:bg-slate-50 font-bold">ยกเลิก</button>}
-                        </div>
-                    </form>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2 text-xs border rounded bg-slate-50"><option value="">- Category -</option>{categories.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                    <input type="text" value={shortDesc} onChange={e => setShortDesc(e.target.value)} className="w-full p-2 text-xs border rounded bg-slate-50" placeholder="Description..."/>
                 </div>
             </div>
 
-            {/* List Side */}
-            <div className="lg:col-span-5">
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 sticky top-6 max-h-[90vh] flex flex-col">
-                    <div className="flex justify-between items-center mb-4 border-b pb-2">
-                        <h2 className="text-lg font-bold">รายการ ({projectsList.length})</h2>
-                        <button onClick={fetchProjects} className="p-1 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-full"><RefreshCw size={16}/></button>
-                    </div>
-                    <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                        {projectsList.map((item, index) => (
-                            <div key={item.id} onClick={() => handleEditClick(item)} className={`flex gap-3 p-3 rounded border cursor-pointer transition relative group ${editId === item.id ? 'border-amber-500 bg-amber-50 shadow-sm ring-1 ring-amber-200' : 'hover:bg-slate-50'} ${item.published === false ? 'opacity-60 bg-gray-50 grayscale' : ''}`}>
-                                
-                                {/* [NEW] ส่วนจัดลำดับที่แก้ไขแล้ว ใส่ปุ่มขึ้นลง */}
-                                <div className="flex flex-col items-center justify-center mr-2 pr-2 border-r border-slate-200 gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <button 
-                                        onClick={(e) => handleReorderProject(index, 'up', e)} 
-                                        disabled={index === 0}
-                                        className="text-slate-400 hover:text-teal-600 disabled:opacity-20 hover:bg-slate-100 rounded p-0.5"
-                                    >
-                                        <ChevronUp size={14}/>
-                                    </button>
-                                    <span className="text-[10px] font-bold text-slate-500 w-5 text-center">{item.order}</span>
-                                    <button 
-                                        onClick={(e) => handleReorderProject(index, 'down', e)} 
-                                        disabled={index === projectsList.length - 1}
-                                        className="text-slate-400 hover:text-teal-600 disabled:opacity-20 hover:bg-slate-100 rounded p-0.5"
-                                    >
-                                        <ChevronDown size={14}/>
-                                    </button>
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-slate-400 uppercase text-xs font-bold tracking-wider"><LayoutTemplate size={14}/> Content Blocks</div>
+                {blocks.map((block, index) => (
+                    <div key={index} className={`relative bg-white rounded-lg border-2 transition-all ${block.published ? 'border-slate-200 shadow-sm' : 'border-dashed border-slate-300 opacity-70'}`}>
+                        <div className="flex justify-between items-center p-2 border-b border-slate-100 bg-slate-50/50 rounded-t-lg">
+                            <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-0.5 px-1 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500">
+                                    <button onClick={() => moveBlock(index, 'up')}><ChevronUp size={12}/></button>
+                                    <button onClick={() => moveBlock(index, 'down')}><ChevronDown size={12}/></button>
                                 </div>
+                                <span className="text-xs font-bold text-slate-400">#{index+1}</span>
+                                <div className="h-4 w-px bg-slate-300 mx-1"></div>
+                                {/* Layout Switcher (เวอร์ชั่นไอคอนใหม่ ดูง่ายขึ้น) */}
+<div className="flex bg-white rounded border border-slate-200 p-0.5 gap-0.5">
+    
+    {/* ปุ่ม: รูปซ้าย */}
+    <button 
+        type="button"
+        onClick={() => updateBlock(index, 'layout', 'left')} 
+        title="Layout: รูปซ้าย / เนื้อหาขวา" 
+        className={`p-1.5 rounded transition-all ${block.layout === 'left' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+    >
+        <IconPicLeft />
+    </button>
 
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-bold text-sm truncate">{item.title}</h3>
-                                        {item.published === false && <span className="text-[9px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-bold">Draft</span>}
-                                    </div>
-                                    <p className="text-[10px] text-blue-500 font-mono truncate">{item.slug ? `/${item.slug}` : '(no-link)'}</p>
-                                </div>
-                                <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-full"><Trash2 size={16}/></button>
+    {/* ปุ่ม: รูปบน */}
+    <button 
+        type="button"
+        onClick={() => updateBlock(index, 'layout', 'top')} 
+        title="Layout: รูปบน / เนื้อหาล่าง" 
+        className={`p-1.5 rounded transition-all ${block.layout === 'top' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+    >
+        <IconPicTop />
+    </button>
+
+    {/* ปุ่ม: รูปขวา */}
+    <button 
+        type="button"
+        onClick={() => updateBlock(index, 'layout', 'right')} 
+        title="Layout: รูปขวา / เนื้อหาซ้าย" 
+        className={`p-1.5 rounded transition-all ${block.layout === 'right' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+    >
+        <IconPicRight />
+    </button>
+
+</div>
                             </div>
-                        ))}
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => updateBlock(index, 'published', !block.published)} className={`text-xs flex items-center gap-1 font-bold ${block.published ? 'text-green-500' : 'text-slate-400'}`}>{block.published ? <Eye size={12}/> : <EyeOff size={12}/>}</button>
+                                <button onClick={() => removeBlock(index)} className="text-slate-300 hover:text-red-500 p-1"><Trash2 size={14}/></button>
+                            </div>
+                        </div>
+
+                        <div className={`p-4 flex gap-4 ${block.layout === 'top' ? 'flex-col' : (block.layout === 'right' ? 'flex-col md:flex-row-reverse' : 'flex-col md:flex-row')}`}>
+                            <div className={`flex flex-col gap-2 ${block.layout === 'top' ? 'w-full' : 'w-full md:w-5/12'}`}>
+                                <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                                    <div className="flex gap-2 mb-2 text-[9px] uppercase font-bold text-slate-400 justify-between">
+                                        <div>
+                                            <button onClick={() => updateBlock(index, 'mediaType', 'image')} className={`mr-2 ${block.mediaType==='image'?'text-slate-900 underline':'hover:text-slate-600'}`}>Image</button>
+                                            <button onClick={() => updateBlock(index, 'mediaType', 'video')} className={`mr-2 ${block.mediaType==='video'?'text-slate-900 underline':'hover:text-slate-600'}`}>Video</button>
+                                            <button onClick={() => updateBlock(index, 'mediaType', 'none')} className={block.mediaType==='none'?'text-red-500 underline':'hover:text-slate-600'}>None</button>
+                                        </div>
+                                        {block.mediaType === 'none' && <span className="text-red-400">No Media</span>}
+                                    </div>
+                                    {block.mediaType !== 'none' && (
+                                        <>
+                                            {block.mediaSrc ? (
+                                                <div className="relative group">
+                                                    <img src={block.mediaSrc} className="w-full h-32 object-cover rounded bg-white border mb-2" alt="preview"/>
+                                                </div>
+                                            ) : (
+                                                <div className="w-full h-32 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs mb-2">No Image</div>
+                                            )}
+                                            <input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-1.5 text-xs border rounded mb-1" placeholder="URL..."/>
+                                            <input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-1.5 text-xs border-b bg-transparent outline-none text-center placeholder:text-slate-300" placeholder="Caption..."/>
+                                            <div className="mt-2 pt-2 border-t flex items-center gap-1">
+                                                <ExternalLink size={10} className="text-slate-400"/>
+                                                <input type="text" value={block.actionUrl || ""} onChange={e => updateBlock(index, 'actionUrl', e.target.value)} className="flex-1 p-1 text-[10px] border rounded text-blue-600" placeholder="Action URL (Optional)"/>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex flex-col gap-2">
+                                <div className="flex justify-between">
+                                    {block.textStyle !== 'quote' && <input type="text" value={block.heading || ""} onChange={e => updateBlock(index, 'heading', e.target.value)} className="font-bold text-sm bg-transparent outline-none placeholder:text-slate-300 w-2/3" placeholder="Heading (Optional)..."/>}
+                                    <button onClick={() => updateBlock(index, 'textStyle', block.textStyle === 'quote' ? 'normal' : 'quote')} className={`text-[10px] border px-2 rounded ml-auto ${block.textStyle === 'quote' ? 'bg-amber-100 text-amber-700 border-amber-300 font-bold' : 'bg-slate-50 text-slate-500'}`}>
+                                        {block.textStyle === 'quote' ? 'Format: Quote' : 'Format: Normal'}
+                                    </button>
+                                </div>
+                                <div className="relative group flex-1">
+                                    <div className="absolute top-0 right-0 flex bg-white border shadow-sm rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                        <button onClick={() => insertHtmlTag(index, 'bold')} className="p-1 hover:bg-slate-100"><Bold size={12}/></button>
+                                        <button onClick={() => insertHtmlTag(index, 'italic')} className="p-1 hover:bg-slate-100"><Italic size={12}/></button>
+                                        <button onClick={() => insertHtmlTag(index, 'link')} className="p-1 hover:bg-slate-100"><LinkIcon size={12}/></button>
+                                    </div>
+                                    <textarea 
+                                        id={`editor-${index}`}
+                                        value={block.content || ""} 
+                                        onChange={e => updateBlock(index, 'content', e.target.value)} 
+                                        rows={5}
+                                        className={`w-full p-2 text-sm border rounded resize-none outline-none focus:border-slate-400 ${block.textStyle === 'quote' ? 'text-center italic font-medium text-amber-900 bg-amber-50/50' : 'text-slate-600'}`}
+                                        placeholder={block.textStyle === 'quote' ? '"Write your quote here..."' : "Paragraph Content..."}
+                                    />
+                                    {block.textStyle === 'quote' && (
+                                        <input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full mt-2 p-1.5 text-xs text-center border-b border-amber-300 bg-amber-50 text-amber-800 placeholder:text-amber-800/50 outline-none font-bold" placeholder="— Author Name"/>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 p-2 flex justify-center bg-slate-50/30 rounded-b-lg">
+                            <button 
+                                type="button"
+                                onClick={() => updateBlock(index, 'hasDivider', !block.hasDivider)}
+                                className={`text-[10px] px-3 py-1 rounded-full flex items-center gap-1 transition-all border ${
+                                    block.hasDivider 
+                                    ? 'bg-slate-800 text-white border-slate-900 shadow-sm' 
+                                    : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                                }`}
+                            >
+                                {block.hasDivider ? <><Minus size={12} className="rotate-90"/> Divider ON</> : <><Plus size={10}/> Add Divider</>}
+                            </button>
+                        </div>
+
                     </div>
-                </div>
+                ))}
+                <button onClick={addBlock} className="w-full py-6 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 font-bold hover:bg-white hover:border-slate-400 hover:text-slate-600 transition-all flex flex-col items-center gap-1"><PlusCircle size={24}/><span>Add Block</span></button>
             </div>
         </div>
       </div>
