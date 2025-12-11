@@ -423,10 +423,9 @@ export default function Home() {
                 <span className="text-slate-500 font-bold tracking-widest uppercase text-sm">Future Vision</span>
                 <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mt-2 mb-6">วิสัยทัศน์ 9 ศูนย์</h2>
                 <div className="w-24 h-1.5 bg-gradient-to-r from-teal-400 to-amber-400 mx-auto rounded-full mb-8"></div>
-                <p className="text-sm sm:text-lg md:text-xl text-slate-600 max-w-full sm:max-w-md md:max-w-2xl mx-auto font-light leading-relaxed px-4">
+                <p className="text-sm sm:text-lg md:text-xl text-slate-600 max-w-[95%] sm:max-w-md md:max-w-2xl mx-auto font-light leading-relaxed px-2">
     เป้าหมายเพื่อขจัดความเหลื่อมล้ำ<br className="block sm:hidden" />
-    และสร้างสังคมที่เป็นธรรม <br className="hidden sm:block" />
-    <span className="sm:hidden"> </span> {/* เว้นวรรคนิดนึงสำหรับมือถือ */}
+    และสร้างสังคมที่เป็นธรรม<br />
     ภายใต้วิสัยทัศน์ <span className="font-semibold text-slate-800">"Zero Inequality, Zero Poverty"</span>
 </p>
             </motion.div>
