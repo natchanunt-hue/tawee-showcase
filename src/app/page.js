@@ -341,70 +341,65 @@ export default function Home() {
 
       <BioSection />
 
-      {/* PROJECTS SECTION */}
-      <section id="projects" className={`py-16 px-6 md:px-12 ${bgColor} relative z-10 overflow-hidden scroll-mt-24`}>
-        {/* [แก้ 1] ลด max-w-7xl เป็น max-w-6xl และลด space-y ให้กระชับขึ้น */}
-        <div className="max-w-6xl mx-auto space-y-12 md:space-y-16">
+      {/* PROJECTS SECTION (Super Compact & Mobile Optimized) */}
+      <section id="projects" className={`py-12 px-4 md:px-8 ${bgColor} relative z-10 overflow-hidden scroll-mt-20`}>
+        <div className="max-w-5xl mx-auto">
           
-          {/* [แก้ 2] ลด margin-bottom ของหัวข้อ (mb-20 -> mb-12) และลดขนาดตัวอักษร */}
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} className="text-center mb-12">
-            <span className="text-amber-600 font-bold tracking-widest uppercase text-xs md:text-sm">Key Missions</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-3">ภารกิจเพื่อประชาชน</h2>
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} className="text-center mb-8">
+            <span className="text-amber-600 font-bold tracking-widest uppercase text-xs">Key Missions</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-1 mb-2">ภารกิจเพื่อประชาชน</h2>
             <div className="h-1 w-20 bg-amber-500 mx-auto rounded-full"></div>
           </motion.div>
           
-          {/* [FIXED] ใช้ div ธรรมดาแทน motion.div */}
-          <div className="space-y-12 md:space-y-16">
+          {/* Content List */}
+<div className="flex flex-col">
           {projectsData.map((item, index) => {
              const isEven = index % 2 === 0;
-             const delayTime = (index % 4) * 0.15; 
-
              return (
                <motion.div 
                    key={item.id}
-                   initial={{ opacity: 0, y: 50 }} 
+                   initial={{ opacity: 0, y: 20 }} 
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-50px" }} 
-                   transition={{ duration: 0.7, delay: delayTime, ease: [0.25, 0.46, 0.45, 0.94] }}
-                   // [แก้ 3] ลด gap ระหว่างภาพกับข้อความ (gap-16 -> gap-10)
-                   className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-8 md:gap-10`}
+                   transition={{ duration: 0.4, delay: 0.1 }}
+                   // [แก้ 1] ลบ border-b border-slate-200 ออกจากตรงนี้
+                   className={`relative flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-start gap-4 md:gap-8 py-6`}
                >
-                 {/* Image Container */}
-                 <div className="w-full md:w-1/2 relative group cursor-pointer overflow-hidden rounded-2xl">
+                 {/* ส่วนรูปภาพ (เหมือนเดิม) */}
+                 <div className="w-full md:w-5/12 relative group cursor-pointer overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-500">
                      <Link href={`/project/${item.slug || item.id}`}>
-                         {/* [แก้ 4] ปรับสัดส่วนภาพให้เตี้ยลง (16/10 -> 16/9) และลดความโค้งมนเล็กน้อย (rounded-2xl) */}
-                         <div className={`relative w-full aspect-[4/3] md:aspect-[16/9] rounded-2xl overflow-hidden shadow-lg transition-all duration-700 group-hover:shadow-xl group-hover:shadow-amber-500/20 bg-white border border-slate-200/50 group-hover:border-amber-400/50`}>
-                             <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                             <div className={`absolute inset-0 bg-gradient-to-br ${isEven ? 'from-slate-50 to-slate-100' : 'from-white to-amber-50/30'} group-hover:opacity-80 transition-opacity duration-500`}></div>
-                             {/* [แก้ 5] ลด padding ภายในรูปลง (p-8 -> p-6) */}
-                             <div className="absolute inset-0 flex items-center justify-center p-6"><img 
-    src={item.image} 
-    alt={item.title} 
-    className="absolute inset-0 w-full h-full object-cover drop-shadow-md group-hover:scale-105 transition-transform duration-700 ease-out z-10" 
-/></div>
+                         <div className="relative w-full aspect-video md:aspect-[16/10] overflow-hidden bg-white">
+                             <div className="absolute inset-0 bg-slate-900/5 group-hover:bg-slate-900/0 transition-colors z-10"></div>
+                             <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                          </div>
                      </Link>
                  </div>
 
-                 {/* Text Container */}
-                 <div className="w-full md:w-1/2 text-center md:text-left">
-                     {/* [แก้ 6] ลดขนาด Tag และ Padding */}
-                     <span className="inline-block py-3 px-3.5 rounded-full bg-white border border-slate-200/50 text-[10px] md:text-[10px] font-bold tracking-widest uppercase text-slate-500 mb-3 shadow-sm leading-none hover:border-amber-400/50 hover:shadow-amber-500/10 transition-all duration-300">{item.category}</span>
-                     
-                     {/* [แก้ 7] ลดขนาด Font หัวข้อ (4xl -> 3xl) */}
-                     <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3 leading-tight group-hover:text-amber-700 transition-colors duration-300">{item.title}</h3>
-                     
-                     {/* [แก้ 8] ลดขนาด Font เนื้อหา (lg -> base) */}
-                     <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-5 font-light">{item.shortDesc}</p>
-                     
-                     {/* [แก้ 9] ลดขนาดปุ่มอ่านรายละเอียด */}
-                     <Link href={`/project/${item.slug || item.id}`} className="inline-flex items-center gap-2 text-amber-700 font-bold uppercase tracking-wide group/btn hover:text-amber-600 transition-colors duration-300 text-xs md:text-sm">
-                        <span>อ่านรายละเอียด</span>
-                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center group-hover/btn:bg-amber-500 group-hover/btn:text-white transition-all duration-300 transform group-hover/btn:translate-x-1">
-                            <ArrowRight size={16} />
-                        </div>
+                 {/* ส่วนข้อความ (เหมือนเดิม) */}
+                 <div className="w-full md:w-7/12 flex flex-col items-start text-left">
+                     <span className="inline-block py-0.5 px-2 rounded bg-amber-50 border border-amber-100 text-[9px] font-bold tracking-wider uppercase text-amber-600 mb-2">
+                        {item.category}
+                     </span>
+                     <Link href={`/project/${item.slug || item.id}`}>
+                        <h3 className="text-lg md:text-2xl font-bold text-slate-800 mb-2 leading-tight hover:text-amber-600 transition-colors">
+                            {item.title}
+                        </h3>
+                     </Link>
+                     <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-3 font-light line-clamp-3 w-full">
+                        {item.shortDesc}
+                     </p>
+                     <Link href={`/project/${item.slug || item.id}`} className="inline-flex items-center gap-1.5 text-slate-700 font-bold uppercase tracking-wide group/btn hover:text-amber-600 transition-colors text-[10px] md:text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 hover:border-amber-200 shadow-sm">
+                        <span>อ่านต่อ</span>
+                        <ArrowRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
                      </Link>
                  </div>
+
+                 {/* [แทรกตรงนี้] เส้นคั่นแบบ Gradient (ซ่อนเส้นถ้าเป็นตัวสุดท้าย) */}
+                 {index !== projectsData.length - 1 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+                 )}
+
                </motion.div>
              );
           })}
