@@ -358,7 +358,11 @@ export default function Home() {
                              <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                              <div className={`absolute inset-0 bg-gradient-to-br ${isEven ? 'from-slate-50 to-slate-100' : 'from-white to-amber-50/30'} group-hover:opacity-80 transition-opacity duration-500`}></div>
                              {/* [แก้ 5] ลด padding ภายในรูปลง (p-8 -> p-6) */}
-                             <div className="absolute inset-0 flex items-center justify-center p-6"><img src={item.image} alt={item.title} className="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-700 ease-out" /></div>
+                             <div className="absolute inset-0 flex items-center justify-center p-6"><img 
+    src={item.image} 
+    alt={item.title} 
+    className="absolute inset-0 w-full h-full object-cover drop-shadow-md group-hover:scale-105 transition-transform duration-700 ease-out z-10" 
+/></div>
                          </div>
                      </Link>
                  </div>
