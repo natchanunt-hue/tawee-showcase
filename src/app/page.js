@@ -185,15 +185,37 @@ const BioSection = () => {
                       <div className="w-20 h-1 bg-amber-300 mx-auto mb-8 rounded-full"></div>
                       <p className="text-slate-800 font-bold text-lg md:text-xl tracking-wide leading-relaxed whitespace-pre-line bg-white p-6 rounded-xl shadow-sm border border-slate-100">{bioIntro.careerHighlight}</p>
                   </div>
-                  <div className="space-y-8 relative border-l-2 border-slate-200 ml-4 md:ml-10 pl-8 md:pl-10 py-4">
+                  <div className="max-w-3xl md:mx-auto ml-4 space-y-6 relative border-l-[3px] border-slate-200 pl-8 md:pl-12 py-2">
                       {bioTimeline.map((item, index) => {
                            const Icon = getIconComponent(item.icon);
                            return (
-                              <div key={index} className="relative group">
-                                  <div className="absolute -left-[49px] md:-left-[58px] top-1 w-10 h-10 rounded-full bg-white border-4 border-amber-50 group-hover:border-amber-200 transition-colors flex items-center justify-center text-amber-600 shadow-sm"><Icon size={16} /></div>
-                                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6">
-                                      <span className="text-sm font-bold uppercase tracking-wider text-amber-600 w-32 shrink-0">{item.year}</span>
-                                      <div><h5 className="font-bold text-lg text-slate-800 group-hover:text-amber-700 transition-colors">{item.role}</h5><p className="text-slate-600 font-light mt-2 max-w-xl leading-relaxed">{item.desc}</p></div>
+                              <div key={index} className="relative group w-full">
+                                  {/* 1. ICON: ตำแหน่งคำนวณใหม่ เป๊ะทุก Pixel
+                                     - Mobile: -left-[49.5px]
+                                     - Desktop: -left-[69.5px]
+                                     - top-0: ยึดเพดาน
+                                  */}
+                                  <div className="absolute -left-[49.5px] md:-left-[69.5px] top-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white border-4 border-amber-50 group-hover:border-amber-200 transition-colors flex items-center justify-center text-amber-600 shadow-sm z-10">
+                                    <Icon size={14} className="md:w-[16px] md:h-[16px]" />
+                                  </div>
+                                  
+                                  {/* 2. CONTENT BLOCK */}
+                                  <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-8 w-full">
+                                      
+                                      {/* ปี (Year): ชิดซ้าย (text-left) */}
+                                      <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-amber-600 w-full sm:w-28 shrink-0 text-left pt-1.5 md:pt-2">
+                                        {item.year}
+                                      </span>
+                                      
+                                      {/* เนื้อหา (Info) */}
+                                      <div className="w-full pt-0.5 md:pt-1">
+                                          <h5 className="font-bold text-base md:text-lg text-slate-800 group-hover:text-amber-700 transition-colors leading-snug">
+                                            {item.role}
+                                          </h5>
+                                          <p className="text-sm md:text-base text-slate-600 font-light mt-2 max-w-full leading-relaxed">
+                                            {item.desc}
+                                          </p>
+                                      </div>
                                   </div>
                               </div>
                            )
