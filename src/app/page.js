@@ -32,6 +32,9 @@ const getIconComponent = (iconName) => {
 const ZeroDetailModal = ({ item, onClose }) => {
     if (!item) return null;
     
+    // DEBUG
+    console.log("Modal opened for item:", item.id, "mechanisms:", item.details?.mechanisms);
+    
     // [SAFETY 1] ดึงค่า Icon และ Color พร้อมค่า Default กันพัง
     // ถ้า item.activeColor ไม่มีค่า ให้ใช้ "text-slate-500" แทน
     const Icon = getIcon(item.icon);
@@ -58,10 +61,10 @@ const ZeroDetailModal = ({ item, onClose }) => {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }} 
                 animate={{ opacity: 1, scale: 1, y: 0 }} 
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl"
+                className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden relative z-10 shadow-2xl flex flex-col"
             >
                 {/* Header */}
-                <div className={`p-6 md:p-8 ${themeBg} border-b ${themeBorder} flex justify-between items-start sticky top-0 bg-opacity-95 backdrop-blur z-20`}>
+                <div className={`p-6 md:p-8 ${themeBg} border-b ${themeBorder} flex justify-between items-start sticky top-0 bg-opacity-98 backdrop-blur-sm z-20 shrink-0`}>
                    <div className="flex items-center gap-4">
                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-white/50 backdrop-blur`}>
                            <Icon size={24} className={themeColor} />
@@ -76,9 +79,9 @@ const ZeroDetailModal = ({ item, onClose }) => {
                 </div>
 
                 {/* Content */}
-                <div className="p-6 md:p-8 space-y-8">
+                <div className="p-6 md:p-8 space-y-8 flex-1 overflow-y-auto">
                     <div>
-                        <p className="text-lg text-slate-700 leading-relaxed font-light">{item.details?.description}</p>
+                        <p className="text-base md:text-lg text-slate-700 leading-relaxed font-light">{item.details?.description}</p>
                     </div>
 
                     {/* How (Mechanisms) - จุดที่เคย Error */}
@@ -86,15 +89,23 @@ const ZeroDetailModal = ({ item, onClose }) => {
                         <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 border-b-2 inline-block pb-1 ${themeBorder} ${themeColor}`}>
                             กลไกสำคัญ (How)
                         </h4>
-                        <ul className="space-y-4">
-                            {item.details?.mechanisms?.map((mech, i) => (
-                                <li key={i} className="flex items-start gap-3">
-                                    {/* เรียกใช้ฟังก์ชัน getDotColor แทนการ replace ตรงๆ */}
-                                    <div className={`mt-2 w-2 h-2 rounded-full shrink-0 ${getDotColor(themeColor)}`}></div>
-                                    <span className="text-slate-700 text-sm md:text-base leading-relaxed">{mech}</span>
-                                </li>
-                            ))}
-                        </ul>
+                        {(() => {
+                            const mechs = item?.details?.mechanisms;
+                            if (!mechs || mechs.length === 0) {
+                                return <p className="text-slate-500 text-sm italic">ยังไม่มีข้อมูลกลไกสำหรับส่วนนี้</p>;
+                            }
+                            return (
+                                <ul className="space-y-4">
+                                    {mechs.map((mech, i) => (
+                                        <li key={i} className="flex items-start gap-3">
+                                            {/* Bullet point - ขนาดพอดี สีสวย */}
+                                            <div className={`mt-2.5 w-2 h-2 rounded-full shrink-0 bg-amber-500`}></div>
+                                            <span className="text-slate-700 text-sm md:text-base leading-relaxed whitespace-pre-wrap">{mech}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            );
+                        })()}
                     </div>
 
                     <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
@@ -152,7 +163,7 @@ const ZeroDetailModal = ({ item, onClose }) => {
 const BioSection = () => {
     const [isOpen, setIsOpen] = useState(false);
     return (
-      <div className="container mx-auto px-6 md:px-12 -mt-8 md:-mt-6 lg:-mt-2 relative z-40 mb-24">
+      <div className="container mx-auto px-6 md:px-12 -mt-8 md:-mt-6 lg:-mt-2 relative z-40 mb-24 pt-16 md:pt-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-5xl mx-auto">
           <div onClick={() => setIsOpen(!isOpen)} className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors gap-4">
             <div className="text-center md:text-left flex-1">
@@ -273,7 +284,7 @@ export default function Home() {
       <Navbar />
       
       {/* HERO */}
-      <section id="hero" className="relative flex items-center justify-center overflow-hidden pt-32 md:pt-20 pb-24 md:pb-12 min-h-[90vh]"> 
+      <section id="hero" className="relative flex items-center justify-center overflow-hidden pt-32 md:pt-20 pb-40 md:pb-12 min-h-[90vh]"> 
         <div className="absolute inset-0 z-0"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhbz5cKU4VE1GF2TrYueMnNje2npzzw109GnV7MuAX4zq71UEb2EShbQs-HZtMNoQSf51DtgSejfBCxzp8C6XjhaUVmQ0IfYmcsM5_yCqYv5qsTtGjWA7fVZsVr4n04J4vsOZ5Ioig18xgBgDm5W7cXuNCnCiEW2NC5o-EPhcdOkPjb2OPGGnyzYDQoY-W-/s0/bg-main.jpg" alt="Background" className="w-full h-full object-cover opacity-25 grayscale" /><div className="absolute inset-0 bg-gradient-to-b from-[#dedee1]/60 via-transparent to-[#dedee1]"></div></div>
         
         <div className="relative z-10 w-full h-full flex flex-col-reverse md:flex-row items-center justify-center gap-4 md:gap-6 lg:gap-10 pt-20 md:pt-0 px-4 sm:px-6 md:px-12 lg:px-16 max-w-6xl mx-auto">
@@ -303,7 +314,7 @@ export default function Home() {
           </motion.div>
         </div>
         
-        <div className="absolute bottom-12 md:bottom-6 left-1/2 -translate-x-1/2 text-slate-500 flex flex-col items-center animate-bounce cursor-pointer hover:text-amber-700 transition-colors z-50 pointer-events-auto" onClick={() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth'})}>
+        <div className="absolute bottom-8 md:bottom-6 left-1/2 -translate-x-1/2 text-slate-500 flex flex-col items-center animate-bounce cursor-pointer hover:text-amber-700 transition-colors z-50 pointer-events-auto" onClick={() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth'})}>
             <span className="text-[10px] uppercase tracking-widest mb-2 font-semibold">Scroll to Explore</span>
             <ArrowDown className="w-5 h-5" />
         </div>
@@ -395,13 +406,16 @@ export default function Home() {
                 </p>
             </motion.div>
 
-            <motion.div variants={containerStagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.25 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div variants={containerStagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.05 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {nineZeros.map((item) => {
                     const Icon = getIcon(item.icon); 
                     const isHovered = hoveredZero === item.id;
                     return (
                         <motion.div key={item.id} variants={itemPopup} onMouseEnter={() => setHoveredZero(item.id)} onMouseLeave={() => setHoveredZero(null)} 
-                            onClick={() => setSelectedZero(item)}
+                            onClick={() => {
+                                console.log("Clicked item:", item.id, "with mechanisms:", item.details?.mechanisms?.length);
+                                setSelectedZero(item);
+                            }}
                             className={`group relative p-8 rounded-2xl cursor-pointer transition-all duration-300 ease-out border-2 
                             ${isHovered ? `bg-white ${item.activeBorder} shadow-xl -translate-y-2` : 'bg-white/60 backdrop-blur-md border-white/50 shadow-sm'}`}>
                             
