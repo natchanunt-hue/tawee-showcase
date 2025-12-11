@@ -269,7 +269,16 @@ export default function Home() {
             const q = query(collection(db, "projects"), orderBy("order", "asc"));
             const querySnapshot = await getDocs(q);
             const firebaseItems = [];
-            querySnapshot.forEach((doc) => firebaseItems.push({ id: doc.id, ...doc.data() }));
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                // [แก้ไข] เพิ่มเงื่อนไข: ถ้า published เป็น false (Draft) ไม่ต้องใส่ในลิสต์
+                // ใช้ !== false เพื่อให้ข้อมูลเก่าที่ยังไม่มี field 'published' ยังแสดงผลได้ตามปกติ
+                if (data.published !== false) {
+                    firebaseItems.push({ id: doc.id, ...data });
+                }
+            });
+            
             if (firebaseItems.length > 0) setProjectsData(firebaseItems);
         } catch (error) { console.error("Error:", error); }
     };

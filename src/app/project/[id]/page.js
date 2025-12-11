@@ -161,24 +161,39 @@ export default function ProjectDetail({ params }) {
   useEffect(() => {
     const fetchProject = async () => {
         try {
-            // Logic ค้นหา: หาจาก Slug ก่อน -> ถ้าไม่เจอหาจาก ID -> ถ้าไม่เจอหาจาก Static Data
-            const q = query(collection(db, "projects"), where("slug", "==", paramId));
-            const querySnapshot = await getDocs(q);
+        // สร้างตัวแปรมารับข้อมูลก่อน ยังไม่ setProject ทันที
+        let foundData = null;
 
-            if (!querySnapshot.empty) {
-                const docData = querySnapshot.docs[0];
-                setProject({ id: docData.id, ...docData.data() });
+        // 1. ลองค้นหาจาก Slug
+        const q = query(collection(db, "projects"), where("slug", "==", paramId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const docData = querySnapshot.docs[0];
+            foundData = { id: docData.id, ...docData.data() };
+        } else {
+            // 2. ถ้าไม่เจอ Slug ลองค้นหาจาก ID
+            const docRef = doc(db, "projects", paramId);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                foundData = { id: docSnap.id, ...docSnap.data() };
             } else {
-                const docRef = doc(db, "projects", paramId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setProject({ id: docSnap.id, ...docSnap.data() });
-                } else {
-                    const staticProject = projects.find(p => p.id.toString() === paramId.toString());
-                    if (staticProject) setProject(staticProject);
-                }
+                // 3. ถ้าไม่เจอทั้งคู่ ลองหาจากข้อมูล Static (ถ้ามี)
+                const staticProject = projects.find(p => p.id.toString() === paramId.toString());
+                if (staticProject) foundData = staticProject;
             }
-        } catch (error) { 
+        }
+
+        // [สำคัญ] เช็คตรงนี้: ถ้าเจอข้อมูล แต่สถานะ published เป็น false (Draft) ให้ถือว่าไม่เจอ
+        if (foundData && foundData.published === false) {
+             console.log("Project is Draft (Hidden). Access Denied.");
+             setProject(null); // จะทำให้ไปแสดงหน้า 404 ด้านล่าง
+        } else {
+             setProject(foundData);
+        }
+
+      } catch (error) { 
             console.error("Error fetching project:", error); 
         } finally { 
             setLoading(false); 

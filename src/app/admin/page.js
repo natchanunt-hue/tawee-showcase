@@ -8,7 +8,7 @@ import { Kanit } from "next/font/google";
 import { 
   Pencil, Trash2, LogOut, PlusCircle, 
   Image as ImageIcon, Video, Quote,
-  ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, Link as LinkIcon, Wand2
+  ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, Link as LinkIcon, Wand2, Eye, EyeOff
 } from "lucide-react";
 
 const kanit = Kanit({ subsets: ["thai"], weight: ["300", "400", "600"] });
@@ -25,7 +25,9 @@ export default function AdminPage() {
   const [coverImage, setCoverImage] = useState("");
   const [order, setOrder] = useState(0); 
   const [contentTitle, setContentTitle] = useState(""); 
-  
+  // [NEW] State สำหรับสถานะ Published ของโปรเจ็ค (Default = true ตามที่ขอ)
+  const [isPublished, setIsPublished] = useState(true);
+
   // State จัดการหมวดหมู่
   const [categories, setCategories] = useState(["Human Rights", "Economic Justice", "Law Enforcement", "Land Rights"]);
   const [newCategory, setNewCategory] = useState("");
@@ -139,6 +141,7 @@ export default function AdminPage() {
         category, shortDesc, image: coverImage, 
         order: Number(order) || 0, 
         contentTitle: contentTitle || "", 
+        published: isPublished, // [NEW] บันทึกสถานะ Published
         contentBlocks: blocks, updatedAt: new Date(),
     };
     const payload = JSON.parse(JSON.stringify(rawPayload));
@@ -175,6 +178,8 @@ export default function AdminPage() {
       setSlug(item.slug || ""); 
       setCategory(item.category); setShortDesc(item.shortDesc); setCoverImage(item.image);
       setOrder(item.order || 0); setContentTitle(item.contentTitle || "");
+      // [NEW] โหลดค่าสถานะ Published ถ้าไม่มีให้เป็น true
+      setIsPublished(item.published !== false);
       if (item.contentBlocks && Array.isArray(item.contentBlocks)) setBlocks(item.contentBlocks); else setBlocks([]);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -183,6 +188,7 @@ export default function AdminPage() {
       setEditId(null); setTitle(""); setSlug(""); setCategory(""); setShortDesc(""); setCoverImage(""); 
       const maxOrder = projectsList.length > 0 ? Math.max(...projectsList.map(i => i.order || 0)) : 0;
       setOrder(maxOrder + 1); setContentTitle(""); setBlocks([]);
+      setIsPublished(true); // [NEW] Reset เป็น Published
   }
 
   const handleLogout = () => { signOut(auth); router.push("/login"); }
@@ -201,13 +207,28 @@ export default function AdminPage() {
             {/* Form Section */}
             <div className="lg:col-span-7">
                 <div className={`bg-white p-6 rounded-xl shadow-lg border transition-colors ${editId ? 'border-amber-400' : 'border-slate-200'}`}>
-                    <h2 className={`text-lg font-bold mb-6 flex items-center gap-2 pb-4 border-b ${editId ? 'text-amber-600' : 'text-teal-600'}`}>
-                        {editId ? <><Pencil size={20}/> กำลังแก้ไข (ID: {order})</> : <><PlusCircle size={20}/> สร้าง Content ใหม่</>}
-                    </h2>
+                    <div className="flex justify-between items-start mb-6 pb-4 border-b">
+                        <h2 className={`text-lg font-bold flex items-center gap-2 ${editId ? 'text-amber-600' : 'text-teal-600'}`}>
+                            {editId ? <><Pencil size={20}/> กำลังแก้ไข (ID: {order})</> : <><PlusCircle size={20}/> สร้าง Content ใหม่</>}
+                        </h2>
+                        
+                        {/* [NEW] ปุ่ม Toggle Status สำหรับ Project หลัก */}
+                        <button 
+                            type="button"
+                            onClick={() => setIsPublished(!isPublished)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                                isPublished 
+                                ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' 
+                                : 'bg-gray-100 text-gray-500 border-gray-300 hover:bg-gray-200'
+                            }`}
+                        >
+                            {isPublished ? <><Eye size={14}/> Published (แสดงผล)</> : <><EyeOff size={14}/> Draft (ซ่อนไว้)</>}
+                        </button>
+                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
-                             {/* [NEW] Title + Slug Section */}
+                             {/* Title + Slug Section */}
                              <div className="col-span-2 space-y-3">
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">ชื่อโครงการ (Title)</label>
@@ -243,7 +264,7 @@ export default function AdminPage() {
                              <input type="text" value={contentTitle} onChange={e => setContentTitle(e.target.value)} placeholder="ค่าเริ่มต้น: รายละเอียดและผลการดำเนินงาน" className="w-full p-2 border rounded text-sm bg-white"/>
                         </div>
 
-                        {/* --- [RESTORED] ส่วนจัดการหมวดหมู่ที่หายไป --- */}
+                        {/* --- ส่วนจัดการหมวดหมู่ --- */}
                         <div className="p-4 bg-slate-50 rounded border border-slate-200">
                              <label className="text-xs font-bold text-slate-500 uppercase block mb-2">จัดการหมวดหมู่ (Categories)</label>
                              <div className="space-y-3">
@@ -274,7 +295,6 @@ export default function AdminPage() {
                                 </div>
                              </div>
                         </div>
-                        {/* ----------------------------------------------- */}
 
                         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                              <div className="flex justify-between items-center mb-4">
@@ -339,13 +359,32 @@ export default function AdminPage() {
                     </div>
                     <div className="space-y-2 overflow-y-auto pr-2 flex-1">
                         {projectsList.map((item, index) => (
-                            <div key={item.id} onClick={() => handleEditClick(item)} className={`flex gap-3 p-3 rounded border cursor-pointer transition relative group ${editId === item.id ? 'border-amber-500 bg-amber-50 shadow-sm ring-1 ring-amber-200' : 'hover:bg-slate-50'}`}>
-                                <div className="flex flex-col gap-1 items-center justify-center pr-2 border-r border-slate-200 mr-2">
-                                    <span className="text-[10px] font-bold text-slate-500">{item.order}</span>
+                            <div key={item.id} onClick={() => handleEditClick(item)} className={`flex gap-3 p-3 rounded border cursor-pointer transition relative group ${editId === item.id ? 'border-amber-500 bg-amber-50 shadow-sm ring-1 ring-amber-200' : 'hover:bg-slate-50'} ${item.published === false ? 'opacity-60 bg-gray-50 grayscale' : ''}`}>
+                                
+                                {/* [NEW] ส่วนจัดลำดับที่แก้ไขแล้ว ใส่ปุ่มขึ้นลง */}
+                                <div className="flex flex-col items-center justify-center mr-2 pr-2 border-r border-slate-200 gap-1" onClick={(e) => e.stopPropagation()}>
+                                    <button 
+                                        onClick={(e) => handleReorderProject(index, 'up', e)} 
+                                        disabled={index === 0}
+                                        className="text-slate-400 hover:text-teal-600 disabled:opacity-20 hover:bg-slate-100 rounded p-0.5"
+                                    >
+                                        <ChevronUp size={14}/>
+                                    </button>
+                                    <span className="text-[10px] font-bold text-slate-500 w-5 text-center">{item.order}</span>
+                                    <button 
+                                        onClick={(e) => handleReorderProject(index, 'down', e)} 
+                                        disabled={index === projectsList.length - 1}
+                                        className="text-slate-400 hover:text-teal-600 disabled:opacity-20 hover:bg-slate-100 rounded p-0.5"
+                                    >
+                                        <ChevronDown size={14}/>
+                                    </button>
                                 </div>
+
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-sm truncate">{item.title}</h3>
-                                    {/* [NEW] แสดง Slug ในรายการด้วย */}
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-sm truncate">{item.title}</h3>
+                                        {item.published === false && <span className="text-[9px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-bold">Draft</span>}
+                                    </div>
                                     <p className="text-[10px] text-blue-500 font-mono truncate">{item.slug ? `/${item.slug}` : '(no-link)'}</p>
                                 </div>
                                 <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-full"><Trash2 size={16}/></button>
