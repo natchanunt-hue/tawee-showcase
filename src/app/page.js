@@ -262,6 +262,16 @@ export default function Home() {
   const [hoveredZero, setHoveredZero] = useState(null);
   const [projectsData, setProjectsData] = useState(projects);
   const [selectedZero, setSelectedZero] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -413,16 +423,16 @@ export default function Home() {
                 <span className="text-slate-500 font-bold tracking-widest uppercase text-sm">Future Vision</span>
                 <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 mt-2 mb-6">วิสัยทัศน์ 9 ศูนย์</h2>
                 <div className="w-24 h-1.5 bg-gradient-to-r from-teal-400 to-amber-400 mx-auto rounded-full mb-8"></div>
-                <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-sm sm:max-w-md md:max-w-2xl mx-auto font-light leading-relaxed">
-                    เป้าหมายเพื่อขจัดความเหลื่อมล้ำและสร้างสังคมที่เป็นธรรม <br/>
-                    ภายใต้วิสัยทัศน์ <span className="font-semibold text-slate-800">"Zero Inequality, Zero Poverty"</span>
-                </p>
+                <p className="text-sm sm:text-lg md:text-xl text-slate-600 max-w-[90%] sm:max-w-md md:max-w-2xl mx-auto font-light leading-relaxed px-2">
+    เป้าหมายเพื่อขจัดความเหลื่อมล้ำและสร้างสังคมที่เป็นธรรม <br/>
+    ภายใต้วิสัยทัศน์ <span className="font-semibold text-slate-800">"Zero Inequality, Zero Poverty"</span>
+</p>
             </motion.div>
 
             <motion.div variants={containerStagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.05 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {nineZeros.map((item) => {
                     const Icon = getIcon(item.icon); 
-                    const isHovered = hoveredZero === item.id;
+                    const isHovered = hoveredZero === item.id || isMobile;
                     return (
                         <motion.div key={item.id} variants={itemPopup} onMouseEnter={() => setHoveredZero(item.id)} onMouseLeave={() => setHoveredZero(null)} 
                             onClick={() => {
