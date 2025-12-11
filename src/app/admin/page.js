@@ -117,7 +117,7 @@ export default function AdminPage() {
   }
 
   // --- Block Logic ---
-  const addBlock = () => setBlocks([...blocks, { heading: "", content: "", mediaType: "none", mediaSrc: "", caption: "" }]);
+  const addBlock = () => setBlocks([...blocks, { heading: "", content: "", mediaType: "none", mediaSrc: "", caption: "", published: true }]);
   const updateBlock = (index, field, value) => { const newBlocks = [...blocks]; newBlocks[index][field] = value; setBlocks(newBlocks); };
   const removeBlock = (index) => { if(!confirm("ลบส่วนเนื้อหานี้?")) return; setBlocks(blocks.filter((_, i) => i !== index)); };
   const moveBlock = (index, direction) => {
@@ -285,7 +285,12 @@ export default function AdminPage() {
                                 {blocks.map((block, index) => (
                                     <div key={index} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm relative group">
                                          <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                                            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Block {index + 1}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Block {index + 1}</span>
+                                                <button type="button" onClick={() => updateBlock(index, 'published', !block.published)} className={`text-xs px-2 py-0.5 rounded font-bold transition-colors ${block.published ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600 opacity-60'}`}>
+                                                    {block.published ? '✓ แสดง' : '○ Draft'}
+                                                </button>
+                                            </div>
                                             <div className="flex gap-1">
                                                 <button type="button" onClick={() => moveBlock(index, 'up')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600" disabled={index===0}><ArrowUp size={14}/></button>
                                                 <button type="button" onClick={() => moveBlock(index, 'down')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600" disabled={index===blocks.length-1}><ArrowDown size={14}/></button>

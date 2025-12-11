@@ -252,7 +252,9 @@ export default function ProjectDetail({ params }) {
         
         <div className="prose prose-lg prose-slate mx-auto max-w-none">
             {project.contentBlocks && project.contentBlocks.length > 0 ? (
-                project.contentBlocks.map((block, index) => {
+                project.contentBlocks
+                    .filter(block => block.published !== false) // แสดงเฉพาะ published blocks (default true)
+                    .map((block, index) => {
                     if (block.mediaType || block.heading || block.content) {
                         return <ZigzagSection key={index} data={block} isEven={index % 2 === 0} />;
                     }
