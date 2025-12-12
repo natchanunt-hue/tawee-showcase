@@ -1,50 +1,39 @@
 "use client";
 import { useState, useEffect } from "react";
-import { db, auth } from "../../lib/firebase"; 
+import { db, auth } from "../../lib/firebase"; // ⚠️ เช็ค path ../../lib/firebase ให้ถูกกับโครงสร้างโฟลเดอร์คุณ
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, orderBy, query, writeBatch, where } from "firebase/firestore"; 
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Kanit } from "next/font/google";
-// --- Custom Layout Icons (ไอคอนที่วาดเองให้เห็นภาพชัดเจน) ---
-
-// 1. ไอคอน: รูปซ้าย / เนื้อหาขวา
-const IconPicLeft = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current">
-    <rect x="3" y="4" width="8" height="16" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" /> {/* กล่องรูป (ซ้าย) */}
-    <path d="M14 6H21" strokeWidth="1.5" strokeLinecap="round"/> {/* เส้นข้อความ (ขวา) */}
-    <path d="M14 10H21" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M14 14H19" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-// 2. ไอคอน: รูปบน / เนื้อหากลาง (Stack)
-const IconPicTop = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current">
-    <rect x="4" y="3" width="16" height="10" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" /> {/* กล่องรูป (บน) */}
-    <path d="M4 17H20" strokeWidth="1.5" strokeLinecap="round"/> {/* เส้นข้อความ (ล่าง) */}
-    <path d="M4 21H16" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-// 3. ไอคอน: รูปขวา / เนื้อหาซ้าย
-const IconPicRight = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current">
-    <rect x="13" y="4" width="8" height="16" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" /> {/* กล่องรูป (ขวา) */}
-    <path d="M3 6H10" strokeWidth="1.5" strokeLinecap="round"/> {/* เส้นข้อความ (ซ้าย) */}
-    <path d="M3 10H10" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M3 14H8" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
 import { 
   Pencil, Trash2, LogOut, PlusCircle, 
   Image as ImageIcon, Video, Quote,
   ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, 
   Link as LinkIcon, Wand2, Eye, EyeOff,
-  AlignLeft, AlignRight, AlignCenter, LayoutTemplate, 
-  Bold, Italic, Layers, Settings, ExternalLink, GripVertical, Minus
+  LayoutTemplate, Bold, Italic, Layers, Settings, ExternalLink, Minus
 } from "lucide-react";
 
 const kanit = Kanit({ subsets: ["thai"], weight: ["300", "400", "500", "600"] });
+
+// --- Custom Layout Icons ---
+const IconPicLeft = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="stroke-current">
+    <rect x="3" y="4" width="8" height="16" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" />
+    <path d="M14 6H21 M14 10H21 M14 14H19" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+const IconPicTop = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="stroke-current">
+    <rect x="4" y="3" width="16" height="10" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" />
+    <path d="M4 17H20 M4 21H16" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+const IconPicRight = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="stroke-current">
+    <rect x="13" y="4" width="8" height="16" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="1.5" />
+    <path d="M3 6H10 M3 10H10 M3 14H8" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
 
 export default function AdminPage() {
   const router = useRouter();
@@ -100,30 +89,19 @@ export default function AdminPage() {
     } catch (error) { console.error("Error:", error); }
   };
 
-  // --- Helper: Generate Slug (แบบคลีน เน้นแชร์สวย English/Number Only) ---
   const generateSlug = () => {
-      if (!title) {
-          alert("กรุณากรอกชื่อโครงการก่อนครับ");
-          return;
-      }
-      
-      // 1. ลองดึงเฉพาะ A-Z และ 0-9 ออกมา
-      let newSlug = title.toString()
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, '-')               // เปลี่ยนช่องว่างเป็นขีด
-          .replace(/[^a-z0-9-]/g, '')         // ** ลบภาษาไทยและอักขระพิเศษทิ้งหมด **
-          .replace(/-+/g, '-')                // ลบขีดซ้ำ
-          .replace(/^-+|-+$/g, '');           // ลบขีดหน้าหลัง
+      if (!title) { alert("กรุณากรอกชื่อโครงการก่อนครับ"); return; }
+      let newSlug = title.toString().toLowerCase().trim()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '') // เอาเฉพาะอังกฤษและตัวเลข
+          .replace(/-+/g, '-')
+          .replace(/^-+|-+$/g, '');
 
-      // 2. ถ้าผลลัพธ์มันว่างเปล่า (เพราะชื่อเป็นไทยล้วน) หรือสั้นเกินไป
       if (!newSlug || newSlug.length < 3) {
-          // สร้างรหัสสุ่มให้แทน (เช่น project-2025-x94) เพื่อให้แชร์แล้วสวย
           const randomId = Math.floor(Math.random() * 1000);
           const year = new Date().getFullYear();
           newSlug = `project-${year}-${randomId}`;
       }
-
       setSlug(newSlug);
   };
 
@@ -142,16 +120,8 @@ export default function AdminPage() {
       };
   };
 
-  const addBlock = () => {
-      setBlocks([...blocks, normalizeBlock({ layout: 'left', mediaType: 'image' })]);
-  };
-
-  const updateBlock = (index, field, value) => { 
-      const newBlocks = [...blocks]; 
-      newBlocks[index][field] = value; 
-      setBlocks(newBlocks); 
-  };
-
+  const addBlock = () => { setBlocks([...blocks, normalizeBlock({ layout: 'left', mediaType: 'image' })]); };
+  const updateBlock = (index, field, value) => { const newBlocks = [...blocks]; newBlocks[index][field] = value; setBlocks(newBlocks); };
   const removeBlock = (index) => { if(confirm("ลบ Block นี้?")) setBlocks(blocks.filter((_, i) => i !== index)); };
   
   const moveBlock = (index, direction) => {
@@ -175,7 +145,6 @@ export default function AdminPage() {
       updateBlock(index, 'content', text.substring(0, start) + insertion + text.substring(end));
   };
 
-  // --- Category Logic ---
   const handleAddCategory = () => { if (newCategory.trim() && !categories.includes(newCategory.trim())) { setCategories([...categories, newCategory.trim()]); setNewCategory(""); }};
   const handleRemoveCategory = (cat) => { if (confirm(`ลบหมวดหมู่ "${cat}"?`)) setCategories(categories.filter(c => c !== cat)); };
   const startEditCategory = (cat) => { setEditingCategory(cat); setTempEditValue(cat); };
@@ -196,7 +165,6 @@ export default function AdminPage() {
       } catch (error) { console.error(error); } finally { setLoading(false); setEditingCategory(null); }
   };
 
-  // --- Project Reorder Logic ---
   const handleReorderProject = async (index, direction, e) => {
     e.stopPropagation();
     if (direction === 'up' && index === 0) return; if (direction === 'down' && index === projectsList.length - 1) return;
@@ -241,7 +209,7 @@ export default function AdminPage() {
              <button onClick={() => {signOut(auth); router.push("/login");}} className="text-red-500 bg-red-50 p-1.5 rounded"><LogOut size={16}/></button>
         </div>
         <div className="p-4 border-b border-slate-100">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1"><Layers size={10}/> หมวดหมู่ (Categories)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1"><Layers size={10}/> หมวดหมู่</h3>
             <div className="flex gap-1 mb-2">
                 <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่ม..." className="flex-1 text-xs p-1.5 border rounded"/>
                 <button onClick={handleAddCategory} className="bg-slate-800 text-white px-2 rounded text-xs"><Plus size={14}/></button>
@@ -286,64 +254,42 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* --- MAIN CANVAS (Right) --- */}
-<div className="flex-1 p-4 md:p-8 h-screen overflow-y-auto bg-slate-100">
-    <div className="max-w-4xl mx-auto pb-20">
-        
-        {/* [แก้ไข] Form Header: เพิ่มปุ่ม Cancel ตรงหัวข้อ */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-            <div>
-                <div className="flex items-center gap-3">
-                    <h2 className={`text-2xl font-bold flex items-center gap-2 ${editId ? 'text-amber-600' : 'text-slate-800'}`}>
-                        {editId ? (
-                            <>
-                                <Pencil size={24}/> กำลังแก้ไข (Editing)
-                            </>
-                        ) : (
-                            <>
-                                <PlusCircle size={24}/> สร้างโปรเจกต์ใหม่
-                            </>
+      {/* --- MAIN CANVAS --- */}
+      <div className="flex-1 p-4 md:p-8 h-screen overflow-y-auto bg-slate-100">
+        <div className="max-w-4xl mx-auto pb-20">
+            
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                <div>
+                    <div className="flex items-center gap-3">
+                        <h2 className={`text-2xl font-bold flex items-center gap-2 ${editId ? 'text-amber-600' : 'text-slate-800'}`}>
+                            {editId ? <><Pencil size={24}/> กำลังแก้ไข</> : <><PlusCircle size={24}/> สร้างใหม่</>}
+                        </h2>
+                        {editId && (
+                            <button onClick={resetForm} className="group flex items-center gap-1 text-xs font-bold bg-red-50 text-red-500 px-3 py-1.5 rounded-full border border-red-100 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                <X size={14} className="group-hover:rotate-90 transition-transform"/> ยกเลิก
+                            </button>
                         )}
-                    </h2>
-
-                    {/* [NEW] ปุ่มกากบาท (Close) สำหรับยกเลิกการแก้ไข */}
-                    {editId && (
-                        <button 
-                            onClick={resetForm}
-                            className="group flex items-center gap-1 text-xs font-bold bg-red-50 text-red-500 px-3 py-1.5 rounded-full border border-red-100 hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                            title="ยกเลิกการเลือก / กลับไปหน้าสร้างใหม่"
-                        >
-                            <X size={14} className="group-hover:rotate-90 transition-transform"/> 
-                            ยกเลิก (Close)
-                        </button>
-                    )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 ml-1">Order: <span className="font-mono font-bold">{order}</span></p>
                 </div>
-                <p className="text-xs text-slate-500 mt-1 ml-1">
-                    ลำดับ (Order ID): <span className="font-mono font-bold">{order}</span>
-                </p>
+                <div className="flex gap-2 w-full md:w-auto">
+                    <button type="button" onClick={() => setIsPublished(!isPublished)} className={`flex-1 md:flex-none flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-bold border ${isPublished ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-300'}`}>
+                        {isPublished ? <><Eye size={14}/> Live</> : <><EyeOff size={14}/> Hidden</>}
+                    </button>
+                    <button onClick={handleSubmit} disabled={loading} className={`flex-1 md:flex-none px-6 py-2 rounded text-white font-bold text-sm shadow flex items-center justify-center gap-2 ${editId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-900 hover:bg-slate-800'}`}>
+                        <Save size={16}/> {loading ? 'Saving...' : (editId ? 'บันทึก' : 'สร้างใหม่')}
+                    </button>
+                </div>
             </div>
-
-            {/* ปุ่ม Save / Published ด้านขวา (เหมือนเดิม) */}
-            <div className="flex gap-2 w-full md:w-auto">
-                <button type="button" onClick={() => setIsPublished(!isPublished)} className={`flex-1 md:flex-none flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-bold border ${isPublished ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-300'}`}>
-                    {isPublished ? <><Eye size={14}/> Live</> : <><EyeOff size={14}/> Hidden</>}
-                </button>
-                <button onClick={handleSubmit} disabled={loading} className={`flex-1 md:flex-none px-6 py-2 rounded text-white font-bold text-sm shadow flex items-center justify-center gap-2 ${editId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-900 hover:bg-slate-800'}`}>
-                    <Save size={16}/> {loading ? 'Saving...' : (editId ? 'บันทึกแก้ไข' : 'สร้างใหม่')}
-                </button>
-            </div>
-        </div>
 
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3 mb-6">
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full text-lg font-bold border-b border-slate-200 focus:border-slate-800 outline-none py-1" placeholder="ชื่อโครงการ (Title)..."/>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full text-lg font-bold border-b border-slate-200 focus:border-slate-800 outline-none py-1" placeholder="ชื่อโครงการ..."/>
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-50 p-2 rounded border border-slate-100 flex items-center gap-2">
                         <LinkIcon size={12} className="text-slate-400"/>
                         <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className="bg-transparent text-xs w-full outline-none" placeholder="url-slug"/>
-                        {/* [FIXED] ปุ่ม Magic Wand เรียกใช้ generateSlug ที่แก้แล้ว */}
-                        <button onClick={generateSlug} type="button" className="text-xs text-blue-500 hover:bg-blue-100 p-1 rounded" title="สร้าง Slug อัตโนมัติ (รองรับไทย)"><Wand2 size={12}/></button>
+                        <button onClick={generateSlug} type="button" className="text-xs text-blue-500 hover:bg-blue-100 p-1 rounded"><Wand2 size={12}/></button>
                     </div>
-                    
                     <div className="bg-slate-50 p-2 rounded border border-slate-100">
                         <div className="flex items-center gap-2">
                             <ImageIcon size={12} className="text-slate-400"/>
@@ -351,14 +297,10 @@ export default function AdminPage() {
                         </div>
                         {coverImage && (
                             <div className="relative w-full h-24 rounded overflow-hidden border border-slate-200 mt-2 group">
-                                <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-white text-xs font-bold">Cover Preview</span>
-                                </div>
+                                <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
                             </div>
                         )}
                     </div>
-                    
                     <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2 text-xs border rounded bg-slate-50"><option value="">- Category -</option>{categories.map(c => <option key={c} value={c}>{c}</option>)}</select>
                     <input type="text" value={shortDesc} onChange={e => setShortDesc(e.target.value)} className="w-full p-2 text-xs border rounded bg-slate-50" placeholder="Description..."/>
                 </div>
@@ -376,40 +318,11 @@ export default function AdminPage() {
                                 </div>
                                 <span className="text-xs font-bold text-slate-400">#{index+1}</span>
                                 <div className="h-4 w-px bg-slate-300 mx-1"></div>
-                                {/* Layout Switcher (เวอร์ชั่นไอคอนใหม่ ดูง่ายขึ้น) */}
-<div className="flex bg-white rounded border border-slate-200 p-0.5 gap-0.5">
-    
-    {/* ปุ่ม: รูปซ้าย */}
-    <button 
-        type="button"
-        onClick={() => updateBlock(index, 'layout', 'left')} 
-        title="Layout: รูปซ้าย / เนื้อหาขวา" 
-        className={`p-1.5 rounded transition-all ${block.layout === 'left' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
-    >
-        <IconPicLeft />
-    </button>
-
-    {/* ปุ่ม: รูปบน */}
-    <button 
-        type="button"
-        onClick={() => updateBlock(index, 'layout', 'top')} 
-        title="Layout: รูปบน / เนื้อหาล่าง" 
-        className={`p-1.5 rounded transition-all ${block.layout === 'top' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
-    >
-        <IconPicTop />
-    </button>
-
-    {/* ปุ่ม: รูปขวา */}
-    <button 
-        type="button"
-        onClick={() => updateBlock(index, 'layout', 'right')} 
-        title="Layout: รูปขวา / เนื้อหาซ้าย" 
-        className={`p-1.5 rounded transition-all ${block.layout === 'right' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
-    >
-        <IconPicRight />
-    </button>
-
-</div>
+                                <div className="flex bg-white rounded border border-slate-200 p-0.5 gap-0.5">
+                                    <button type="button" onClick={() => updateBlock(index, 'layout', 'left')} className={`p-1.5 rounded ${block.layout === 'left' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-100'}`}><IconPicLeft /></button>
+                                    <button type="button" onClick={() => updateBlock(index, 'layout', 'top')} className={`p-1.5 rounded ${block.layout === 'top' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-100'}`}><IconPicTop /></button>
+                                    <button type="button" onClick={() => updateBlock(index, 'layout', 'right')} className={`p-1.5 rounded ${block.layout === 'right' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-100'}`}><IconPicRight /></button>
+                                </div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button onClick={() => updateBlock(index, 'published', !block.published)} className={`text-xs flex items-center gap-1 font-bold ${block.published ? 'text-green-500' : 'text-slate-400'}`}>{block.published ? <Eye size={12}/> : <EyeOff size={12}/>}</button>
@@ -426,17 +339,10 @@ export default function AdminPage() {
                                             <button onClick={() => updateBlock(index, 'mediaType', 'video')} className={`mr-2 ${block.mediaType==='video'?'text-slate-900 underline':'hover:text-slate-600'}`}>Video</button>
                                             <button onClick={() => updateBlock(index, 'mediaType', 'none')} className={block.mediaType==='none'?'text-red-500 underline':'hover:text-slate-600'}>None</button>
                                         </div>
-                                        {block.mediaType === 'none' && <span className="text-red-400">No Media</span>}
                                     </div>
                                     {block.mediaType !== 'none' && (
                                         <>
-                                            {block.mediaSrc ? (
-                                                <div className="relative group">
-                                                    <img src={block.mediaSrc} className="w-full h-32 object-cover rounded bg-white border mb-2" alt="preview"/>
-                                                </div>
-                                            ) : (
-                                                <div className="w-full h-32 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs mb-2">No Image</div>
-                                            )}
+                                            {block.mediaSrc ? ( <div className="relative group"><img src={block.mediaSrc} className="w-full h-32 object-cover rounded bg-white border mb-2" alt="preview"/></div> ) : ( <div className="w-full h-32 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs mb-2">No Image</div> )}
                                             <input type="text" value={block.mediaSrc || ""} onChange={e => updateBlock(index, 'mediaSrc', e.target.value)} className="w-full p-1.5 text-xs border rounded mb-1" placeholder="URL..."/>
                                             <input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full p-1.5 text-xs border-b bg-transparent outline-none text-center placeholder:text-slate-300" placeholder="Caption..."/>
                                             <div className="mt-2 pt-2 border-t flex items-center gap-1">
@@ -461,35 +367,16 @@ export default function AdminPage() {
                                         <button onClick={() => insertHtmlTag(index, 'italic')} className="p-1 hover:bg-slate-100"><Italic size={12}/></button>
                                         <button onClick={() => insertHtmlTag(index, 'link')} className="p-1 hover:bg-slate-100"><LinkIcon size={12}/></button>
                                     </div>
-                                    <textarea 
-                                        id={`editor-${index}`}
-                                        value={block.content || ""} 
-                                        onChange={e => updateBlock(index, 'content', e.target.value)} 
-                                        rows={5}
-                                        className={`w-full p-2 text-sm border rounded resize-none outline-none focus:border-slate-400 ${block.textStyle === 'quote' ? 'text-center italic font-medium text-amber-900 bg-amber-50/50' : 'text-slate-600'}`}
-                                        placeholder={block.textStyle === 'quote' ? '"Write your quote here..."' : "Paragraph Content..."}
-                                    />
-                                    {block.textStyle === 'quote' && (
-                                        <input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full mt-2 p-1.5 text-xs text-center border-b border-amber-300 bg-amber-50 text-amber-800 placeholder:text-amber-800/50 outline-none font-bold" placeholder="— Author Name"/>
-                                    )}
+                                    <textarea id={`editor-${index}`} value={block.content || ""} onChange={e => updateBlock(index, 'content', e.target.value)} rows={5} className={`w-full p-2 text-sm border rounded resize-none outline-none focus:border-slate-400 ${block.textStyle === 'quote' ? 'text-center italic font-medium text-amber-900 bg-amber-50/50' : 'text-slate-600'}`} placeholder={block.textStyle === 'quote' ? '"Write your quote here..."' : "Paragraph Content..."} />
+                                    {block.textStyle === 'quote' && ( <input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full mt-2 p-1.5 text-xs text-center border-b border-amber-300 bg-amber-50 text-amber-800 placeholder:text-amber-800/50 outline-none font-bold" placeholder="— Author Name"/> )}
                                 </div>
                             </div>
                         </div>
-
                         <div className="border-t border-slate-100 p-2 flex justify-center bg-slate-50/30 rounded-b-lg">
-                            <button 
-                                type="button"
-                                onClick={() => updateBlock(index, 'hasDivider', !block.hasDivider)}
-                                className={`text-[10px] px-3 py-1 rounded-full flex items-center gap-1 transition-all border ${
-                                    block.hasDivider 
-                                    ? 'bg-slate-800 text-white border-slate-900 shadow-sm' 
-                                    : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
-                                }`}
-                            >
+                            <button type="button" onClick={() => updateBlock(index, 'hasDivider', !block.hasDivider)} className={`text-[10px] px-3 py-1 rounded-full flex items-center gap-1 transition-all border ${block.hasDivider ? 'bg-slate-800 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}>
                                 {block.hasDivider ? <><Minus size={12} className="rotate-90"/> Divider ON</> : <><Plus size={10}/> Add Divider</>}
                             </button>
                         </div>
-
                     </div>
                 ))}
                 <button onClick={addBlock} className="w-full py-6 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 font-bold hover:bg-white hover:border-slate-400 hover:text-slate-600 transition-all flex flex-col items-center gap-1"><PlusCircle size={24}/><span>Add Block</span></button>

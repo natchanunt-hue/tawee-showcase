@@ -1,33 +1,30 @@
-import { Geist, Geist_Mono } from "next/font/google";
+// src/app/layout.js
 import "./globals.css";
+import { Kanit } from "next/font/google";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const kanit = Kanit({ subsets: ["thai", "latin"], weight: ["300", "400", "500", "600", "700"], display: "swap" });
 
 export const metadata = {
   title: "Tawee Sodsong | พ.ต.อ.ทวี สอดส่อง",
   description: "ผลงาน นโยบาย และภารกิจ ของ พ.ต.อ.ทวี สอดส่อง",
-robots: {
+  // 🛡️ ป้องกัน Google/Bot ชั่วคราว
+  robots: {
     index: false,
     follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html lang="th">
+      <body className={kanit.className}>{children}</body>
     </html>
   );
 }
