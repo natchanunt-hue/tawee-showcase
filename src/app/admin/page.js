@@ -164,7 +164,7 @@ export default function AdminPage() {
       }
       else if (tagType === 'list') {
           // สร้าง Bullet point แบบ Tailwind
-          insertion = `\n<ul class="list-disc list-inside space-y-1">\n  <li>${selectedText || 'รายการที่ 1'}</li>\n  <li>รายการที่ 2</li>\n</ul>\n`;
+          insertion = `<ul class="list-disc list-inside"><li>${selectedText}</li></ul>`;
       }
 
       // รวมข้อความและอัปเดต
