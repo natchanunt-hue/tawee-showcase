@@ -1,4 +1,5 @@
-// src/app/page.js
+export const dynamic = "force-dynamic";
+
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../lib/firebase"; 
 import HomeClient from "./HomeClient"; 
