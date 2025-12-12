@@ -161,18 +161,30 @@ const DynamicBlock = memo(({ data }) => {
 
     const TextContent = () => {
         const isQuote = data.textStyle === 'quote' || data.mediaType === 'quote';
+        
         if (isQuote) {
             return (
                 <div className="relative py-6 px-4 md:px-8 w-full">
                     <Quote size={28} className="text-amber-400 absolute top-0 left-0 opacity-60 transform scale-x-[-1]" />
                     <div className="relative z-10 px-2 my-2">
-                        <div className="text-lg md:text-2xl font-medium text-slate-700 italic leading-relaxed text-center md:text-left" dangerouslySetInnerHTML={{ __html: data.content }} />
+                        {/* ✅ เติม whitespace-pre-line ตรงนี้ครับ */}
+                        <div 
+                            className="text-lg md:text-2xl font-medium text-slate-700 italic leading-relaxed text-center md:text-left whitespace-pre-line" 
+                            dangerouslySetInnerHTML={{ __html: data.content }} 
+                        />
                     </div>
                     <Quote size={28} className="text-amber-400 absolute bottom-0 right-0 opacity-60" />
-                    {data.caption && ( <div className="mt-4 flex justify-center md:justify-start items-center gap-3"><div className="h-px w-8 bg-amber-400"></div><p className="text-slate-500 font-bold text-xs tracking-wider uppercase">{data.caption}</p></div> )}
+                    {data.caption && ( 
+                        <div className="mt-4 flex justify-center md:justify-start items-center gap-3">
+                            <div className="h-px w-8 bg-amber-400"></div>
+                            <p className="text-slate-500 font-bold text-xs tracking-wider uppercase">{data.caption}</p>
+                        </div> 
+                    )}
                 </div>
             );
         }
+        
+        // ส่วนข้อความปกติ (อันนี้มี whitespace-pre-line อยู่แล้ว สังเกตท้ายบรรทัด)
         return (
             <div className="flex flex-col gap-4 w-full">
                 {data.heading && ( <h2 className="text-2xl md:text-3xl font-bold text-slate-900 border-l-4 border-amber-500 pl-4 leading-tight">{data.heading}</h2> )}
