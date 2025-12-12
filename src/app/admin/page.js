@@ -10,7 +10,9 @@ import {
   Image as ImageIcon, Video, Quote,
   ArrowUp, ArrowDown, Save, ChevronUp, ChevronDown, Plus, X, Check, RefreshCw, 
   Link as LinkIcon, Wand2, Eye, EyeOff,
-  LayoutTemplate, Bold, Italic, Layers, Settings, ExternalLink, Minus
+  LayoutTemplate, Bold, Italic, Layers, Settings, ExternalLink, Minus,
+  // ✨ เพิ่ม 3 ตัวนี้ครับ
+  Underline, AlignCenter, List 
 } from "lucide-react";
 
 const kanit = Kanit({ subsets: ["thai"], weight: ["300", "400", "500", "600"] });
@@ -135,13 +137,37 @@ export default function AdminPage() {
   const insertHtmlTag = (index, tagType) => {
       const textarea = document.getElementById(`editor-${index}`);
       if (!textarea) return;
-      const start = textarea.selectionStart; const end = textarea.selectionEnd;
+      
+      const start = textarea.selectionStart; 
+      const end = textarea.selectionEnd;
       const text = blocks[index].content || "";
       const selectedText = text.substring(start, end);
+      
       let insertion = "";
+      
+      // --- Logic เดิม ---
       if (tagType === 'bold') insertion = `<b>${selectedText || 'ตัวหนา'}</b>`;
       else if (tagType === 'italic') insertion = `<i>${selectedText || 'ตัวเอียง'}</i>`;
-      else if (tagType === 'link') { const url = prompt("ใส่ URL:", "https://"); if(url) insertion = `<a href="${url}" target="_blank" class="text-amber-600 underline">${selectedText || 'ลิงก์'}</a>`; else return; }
+      else if (tagType === 'link') { 
+          const url = prompt("ใส่ URL:", "https://"); 
+          if(url) insertion = `<a href="${url}" target="_blank" class="text-amber-600 underline">${selectedText || 'ลิงก์'}</a>`; 
+          else return; 
+      }
+      
+      // --- ✨ ของใหม่ที่เพิ่มให้ ---
+      else if (tagType === 'underline') {
+          insertion = `<u>${selectedText || 'ขีดเส้นใต้'}</u>`;
+      }
+      else if (tagType === 'center') {
+          // ใช้ class text-center ของ Tailwind
+          insertion = `<div class="text-center">${selectedText || 'ข้อความจัดกึ่งกลาง'}</div>`;
+      }
+      else if (tagType === 'list') {
+          // สร้าง Bullet point แบบ Tailwind
+          insertion = `\n<ul class="list-disc list-inside space-y-1">\n  <li>${selectedText || 'รายการที่ 1'}</li>\n  <li>รายการที่ 2</li>\n</ul>\n`;
+      }
+
+      // รวมข้อความและอัปเดต
       updateBlock(index, 'content', text.substring(0, start) + insertion + text.substring(end));
   };
 
@@ -362,11 +388,38 @@ export default function AdminPage() {
                                     </button>
                                 </div>
                                 <div className="relative group flex-1">
-                                    <div className="absolute top-0 right-0 flex bg-white border shadow-sm rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <button onClick={() => insertHtmlTag(index, 'bold')} className="p-1 hover:bg-slate-100"><Bold size={12}/></button>
-                                        <button onClick={() => insertHtmlTag(index, 'italic')} className="p-1 hover:bg-slate-100"><Italic size={12}/></button>
-                                        <button onClick={() => insertHtmlTag(index, 'link')} className="p-1 hover:bg-slate-100"><LinkIcon size={12}/></button>
-                                    </div>
+                                    <div className="absolute top-0 right-0 flex bg-white border-b border-l shadow-sm rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 overflow-hidden">
+    
+    {/* 1. ตัวหนา */}
+    <button type="button" onClick={() => insertHtmlTag(index, 'bold')} className="p-2 hover:bg-slate-100 text-slate-600 border-r border-slate-100" title="ตัวหนา (Bold)">
+        <Bold size={14}/>
+    </button>
+    
+    {/* 2. ตัวเอียง */}
+    <button type="button" onClick={() => insertHtmlTag(index, 'italic')} className="p-2 hover:bg-slate-100 text-slate-600 border-r border-slate-100" title="ตัวเอียง (Italic)">
+        <Italic size={14}/>
+    </button>
+
+    {/* 3. ขีดเส้นใต้ (ใหม่) */}
+    <button type="button" onClick={() => insertHtmlTag(index, 'underline')} className="p-2 hover:bg-slate-100 text-slate-600 border-r border-slate-100" title="ขีดเส้นใต้ (Underline)">
+        <Underline size={14}/>
+    </button>
+
+    {/* 4. จัดกึ่งกลาง (ใหม่ - ตามคำขอ) */}
+    <button type="button" onClick={() => insertHtmlTag(index, 'center')} className="p-2 hover:bg-slate-100 text-slate-600 border-r border-slate-100" title="จัดกึ่งกลาง (Center)">
+        <AlignCenter size={14}/>
+    </button>
+
+    {/* 5. รายการ Bullet (ใหม่) */}
+    <button type="button" onClick={() => insertHtmlTag(index, 'list')} className="p-2 hover:bg-slate-100 text-slate-600 border-r border-slate-100" title="รายการ (List)">
+        <List size={14}/>
+    </button>
+
+    {/* 6. ลิงก์ */}
+    <button type="button" onClick={() => insertHtmlTag(index, 'link')} className="p-2 hover:bg-slate-100 text-slate-600" title="แทรกลิงก์ (Link)">
+        <LinkIcon size={14}/>
+    </button>
+</div>
                                     <textarea id={`editor-${index}`} value={block.content || ""} onChange={e => updateBlock(index, 'content', e.target.value)} rows={5} className={`w-full p-2 text-sm border rounded resize-none outline-none focus:border-slate-400 ${block.textStyle === 'quote' ? 'text-center italic font-medium text-amber-900 bg-amber-50/50' : 'text-slate-600'}`} placeholder={block.textStyle === 'quote' ? '"Write your quote here..."' : "Paragraph Content..."} />
                                     {block.textStyle === 'quote' && ( <input type="text" value={block.caption || ""} onChange={e => updateBlock(index, 'caption', e.target.value)} className="w-full mt-2 p-1.5 text-xs text-center border-b border-amber-300 bg-amber-50 text-amber-800 placeholder:text-amber-800/50 outline-none font-bold" placeholder="— Author Name"/> )}
                                 </div>
