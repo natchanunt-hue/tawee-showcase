@@ -7,14 +7,19 @@ import {
   ExternalLink, Facebook, Instagram,
   Circle, Star, Award, Shield, Users, Zap, Target, BookOpen, Heart, Globe,
   Badge, Search, HeartHandshake, Flag, Scale, Landmark,
-  BarChart3, ArrowRight 
+  BarChart3, ArrowRight, Loader2 // เพิ่ม Loader2
 } from "lucide-react";
 import { Kanit } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image"; 
 import { useEffect, useState, memo, useCallback } from 'react'; 
 
-// ตรวจสอบ Path import ให้ถูกต้อง
+// --- 1. เพิ่ม IMPORTS ของ Firebase และ AuthContext ---
+import { collection, getDocs, query } from "firebase/firestore"; 
+import { db } from "../lib/firebase"; 
+import { useAuth } from "../context/AuthContext";
+// --------------------------------------------------
+
 import { nineZeros, getIcon } from "../data/nineZeros"; 
 import { bioIntro, bioTimeline } from "../data/bioData"; 
 
@@ -218,7 +223,6 @@ const ZeroDetailModal = memo(({ item, onClose }) => {
     );
 });
 
-// 👉 Component กล่อง Bio (ที่หายไป) อยู่ตรงนี้ครับ
 const BioSection = memo(() => {
     const [isOpen, setIsOpen] = useState(false);
     return (
@@ -269,15 +273,60 @@ const BioSection = memo(() => {
 });
 
 export default function HomeClient({ initialProjects }) {
+  // --- 2. เรียกใช้ AuthContext ---
+  const { user } = useAuth(); 
+  // ------------------------------
+  
   const [hoveredZero, setHoveredZero] = useState(null);
   const [projectsData, setProjectsData] = useState(initialProjects || []);
   const [selectedZero, setSelectedZero] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // --- 3. เพิ่ม State สำหรับ Loading ---
+  const [loadingProjects, setLoadingProjects] = useState(!initialProjects); 
 
   useEffect(() => {
     const checkMobile = () => { setIsMobile(window.innerWidth < 768); };
     checkMobile(); window.addEventListener('resize', checkMobile); return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // --- 4. เพิ่ม useEffect เพื่อดึงข้อมูล Projects เมื่อ Login แล้ว ---
+  useEffect(() => {
+    // ถ้ามี User และยังไม่มีข้อมูล (หรือข้อมูลว่างเปล่า) ให้ทำการ Fetch
+    if (user && projectsData.length === 0) {
+        setLoadingProjects(true);
+        const fetchProjects = async () => {
+            try {
+                const q = query(collection(db, "projects")); 
+                const querySnapshot = await getDocs(q);
+                
+                const data = querySnapshot.docs
+                .map((doc) => {
+                    const docData = doc.data();
+                    return { 
+                    id: doc.id, 
+                    ...docData,
+                    // แปลง Timestamp เป็น String
+                    createdAt: docData.createdAt?.toDate ? docData.createdAt.toDate().toISOString() : null,
+                    updatedAt: docData.updatedAt?.toDate ? docData.updatedAt.toDate().toISOString() : null,
+                    order: typeof docData.order === 'number' ? docData.order : 999 
+                    };
+                })
+                .filter((item) => item.published !== false)
+                .sort((a, b) => a.order - b.order); // เรียงลำดับ
+                
+                setProjectsData(data);
+            } catch (error) {
+                console.error("Error fetching projects client-side:", error);
+            } finally {
+                setLoadingProjects(false);
+            }
+        };
+
+        fetchProjects();
+    }
+  }, [user, projectsData.length]);
+  // -------------------------------------------------------------
 
   const handleMouseEnter = useCallback((id) => setHoveredZero(id), []);
   const handleMouseLeave = useCallback(() => setHoveredZero(null), []);
@@ -331,9 +380,22 @@ export default function HomeClient({ initialProjects }) {
       <section id="projects" className="py-20 px-6 md:px-12 bg-white relative z-10 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.05)] scroll-mt-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16"><span className="text-amber-600 font-bold tracking-[0.2em] uppercase text-xs mb-3 block">Key Missions</span><h2 className="text-3xl md:text-5xl font-bold text-slate-900">ภารกิจเพื่อประชาชน</h2></div>
-          <div className="grid gap-16 md:gap-20">
-          {projectsData.map((item, index) => ( <ProjectCard key={item.id} item={item} isEven={index % 2 === 0} /> ))}
-          </div>
+          
+          {/* แสดง Loader หรือ ข้อมูล */}
+          {loadingProjects ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <Loader2 className="animate-spin text-amber-500" size={48} />
+                  <p className="text-slate-400 font-light">กำลังโหลดข้อมูลภารกิจ...</p>
+              </div>
+          ) : (
+              <div className="grid gap-16 md:gap-20">
+                {projectsData.length > 0 ? (
+                    projectsData.map((item, index) => ( <ProjectCard key={item.id} item={item} isEven={index % 2 === 0} /> ))
+                ) : (
+                    <div className="text-center py-10 text-slate-400">ไม่พบข้อมูลโครงการ</div>
+                )}
+              </div>
+          )}
         </div>
       </section>
 
