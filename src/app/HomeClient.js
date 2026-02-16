@@ -351,11 +351,11 @@ export default function HomeClient({ initialProjects }) {
         <div className="relative z-10 w-full h-full flex flex-col-reverse md:flex-row items-center justify-center gap-8 md:gap-12 pt-10 md:pt-0 px-4 sm:px-6 md:px-12 lg:px-16 max-w-6xl mx-auto">
           <div className="flex-1 relative flex flex-col items-center md:items-start justify-center z-20 text-center md:text-left min-w-0">
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.5, ease: "easeOut" }} className="absolute -top-16 -left-16 md:-top-32 md:-left-12 w-[80vw] max-w-[400px] md:max-w-[600px] h-auto z-0 opacity-10 pointer-events-none">
-                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhHsMQuM3GGn1po3jItyUcaLaAZ_pP7sFKDQJ7aXQXwGChsUXcRO8OC-NrEiQ9GFTGc3kDucu5gdBPv0W5UU9LzvIP7Nn0kokzTKAtsNKj7qJgyhgS1eTzk5hdHz1AoXVglJRrCZw_vM9FbR09Uh3EI96zXNUngNIBRfLpYQUHx22t938iqE65JToQQVvfB/s0/quote-shape.png" alt="Quote" className="w-full h-full object-contain transform -rotate-12" />
+                <img src="/images/hero/quote-shape.png" alt="Quote" className="w-full h-full object-contain transform -rotate-12" />
             </motion.div>
             <motion.div initial="hidden" animate="visible" transition={{ duration: 0.8 }} variants={{ hidden: { opacity: 0, x: -30 }, visible: { opacity: 1, x: 0 } }} className="relative z-10 w-full flex flex-col items-center md:items-start">
                 <div className="mb-7 md:mb-10 w-[300px] md:w-[380px] lg:w-[480px] shrink-0">
-                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiQNWdzpwUeG8ZWHn2L6wIis_Mu4xZQuZ1aSTrtNRfbiKGDeTyc86pZCf2hbbWi1noBxwD52-nrAjtZ7KTwnYbLEcoKy2RqT2Gy0Jmm6XRsE9Stnz9ogReRIUIeabOhGoEl_5JHThoEF27rp2at-mwgOEJgpRQaUiBm8_MS7C4TBrnFM538yZUEpdTd9scB/s0/Name-sign.png" alt="Tawee Sodsong" className="w-full h-auto object-contain drop-shadow-sm" />
+                    <img src="/images/hero/Name-sign.png" alt="Tawee Sodsong" className="w-full h-auto object-contain drop-shadow-sm" />
                 </div>
                 <motion.div initial={{ opacity: 0, y: 20, filter: "blur(5px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.8, delay: 0.3 }} className="max-w-md px-2 md:px-0 md:pl-6 border-l-0 md:border-l-4 border-amber-600">
                     <blockquote className="text-base md:text-xl text-slate-700 font-medium italic leading-relaxed">
@@ -367,7 +367,7 @@ export default function HomeClient({ initialProjects }) {
           <motion.div initial="hidden" animate="visible" transition={{ duration: 0.8, delay: 0.2 }} variants={{ hidden: { opacity: 0, x: 30 }, visible: { opacity: 1, x: 0 } }} className="flex-1 flex justify-end items-center relative z-30 min-w-0 pr-4 md:pr-0">
              <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="relative w-[260px] sm:w-[320px] md:w-[320px] lg:w-[420px] h-auto shrink-0 will-change-transform-opacity">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] bg-gradient-to-tr from-white to-slate-300 rounded-full blur-3xl opacity-50"></div>
-                <Image src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png" alt="Tawee" width={420} height={600} priority className="w-full h-auto object-contain drop-shadow-2xl relative z-10" />
+                <Image src="/images/hero/hero-tawee.png" alt="Tawee" width={420} height={600} priority className="w-full h-auto object-contain drop-shadow-2xl relative z-10" />
              </motion.div>
           </motion.div>
         </div>
@@ -429,7 +429,7 @@ export default function HomeClient({ initialProjects }) {
       <footer className="bg-white border-t border-slate-100 pt-16 pb-8 text-center">
           <div className="flex flex-col items-center justify-center mb-8">
              <div className="relative w-20 h-20 mx-auto mb-6">
-                 <Image src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png" alt="Tawee Profile" fill sizes="80px" className="object-contain grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
+                 <Image src="/images/hero/hero-tawee.png" alt="Tawee Profile" fill sizes="80px" className="object-contain grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
              </div>
              <div className="flex gap-6 mb-6">
                   <a href="https://www.facebook.com/TaweeSodsongOfficial" target="_blank" className="text-slate-400 hover:text-blue-600 transition-colors"><Facebook size={18} /></a>

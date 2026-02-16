@@ -311,7 +311,7 @@ export default function ProjectDetail({ params }) {
                     {/* 7. Footer Image: ใช้ Next Image */}
                     <div className="relative w-20 h-20 mx-auto">
                         <Image 
-                            src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgc3BXA48fPuLuhTLBKckmG3DG21AsFIrcb8ev3cyB3EgqZIEc4Be1hCRTLvcZ8_jQipeH1wOh_aq3K0_m5ONkC14GY8IuqBdfxRN9WtbZoYdzpM3eNlZaWnBJqw4nkD5WxnHdpYJeDgwTsELefWrwzjfmaho_NPyvVxfKPoJg7Lyuy0qu1CVNxqKnpFsTX/s0/hero-tawee.png" 
+                            src="/images/hero/hero-tawee.png" 
                             alt="Profile" 
                             fill
                             className="object-contain drop-shadow-md"
