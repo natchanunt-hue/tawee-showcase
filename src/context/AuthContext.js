@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         // 1. ตรวจสอบว่าใช่อีเมลองค์กรหรือไม่
-        if (currentUser.email.endsWith("@fufonglabs.com")) {
+        if (currentUser.email.endsWith("@fufonglabs.com") || currentUser.email === "wansao@izocialth.com") {
           setUser(currentUser);
           // ถ้าล็อกอินผ่านแล้ว แต่อยู่หน้า login ให้ดีดไปหน้าแรก
           if (pathname === "/login") {

@@ -35,7 +35,7 @@ export default function LoginPage() {
         const user = result.user;
 
         // เช็ค Domain หลังจาก Login ผ่าน Google สำเร็จ
-        if (!user.email.endsWith("@fufonglabs.com")) {
+        if (!user.email.endsWith("@fufonglabs.com") && user.email !== "wansao@izocialth.com") {
             await signOut(auth); // ถ้าไม่ใช่เมลบริษัท ให้เตะออกทันที
             setError("อนุญาตเฉพาะ Google Account ของ @fufonglabs.com เท่านั้น");
             setLoading(false);

@@ -4,7 +4,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // สัญลักษณ์ ** หมายถึงอนุญาตทุกเว็บที่เป็น https
+        hostname: "**", 
       },
     ],
   },
