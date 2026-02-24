@@ -316,7 +316,7 @@ export default function ProjectDetail({ params }) {
                             src="/images/hero/hero-tawee.png" 
                             alt="Profile" 
                             fill
-                            className="object-contain drop-shadow-md"
+                            className="object-contain opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
                             sizes="80px"
                             loading="lazy"
                         />

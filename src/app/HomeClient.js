@@ -439,7 +439,7 @@ export default function HomeClient({ initialProjects }) {
       <footer className="bg-white border-t border-slate-100 pt-16 pb-8 text-center">
           <div className="flex flex-col items-center justify-center mb-8">
              <div className="relative w-20 h-20 mx-auto mb-6">
-                 <Image src="/images/hero/hero-tawee.png" alt="Tawee Profile" fill sizes="80px" className="object-contain grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
+                 <Image src="/images/hero/hero-tawee.png" alt="Tawee Profile" fill sizes="80px" className="object-contain opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
              </div>
              <div className="flex gap-6 mb-6">
                   <a href="https://www.facebook.com/TaweeSodsongOfficial" target="_blank" className="text-slate-400 hover:text-blue-600 transition-colors"><Facebook size={18} /></a>
