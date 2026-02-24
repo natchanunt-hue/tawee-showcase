@@ -279,6 +279,10 @@ const BioSection = memo(() => {
 });
 
 export default function HomeClient({ initialProjects }) {
+  // 1. วางตรงนี้เลยครับ (บรรทัดที่ 281)
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
+  
   // --- 2. เรียกใช้ AuthContext ---
   const { user } = useAuth(); 
   // ------------------------------
@@ -442,9 +446,56 @@ export default function HomeClient({ initialProjects }) {
                   <a href="https://www.instagram.com/taweesodsongofficial" target="_blank" className="text-slate-400 hover:text-pink-600 transition-colors"><Instagram size={18} /></a>
                   <a href="https://twitter.com/TaweeSodsong" target="_blank" className="text-slate-400 hover:text-black transition-colors"><svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a>
              </div>
-             <div className="space-y-1"><p className="text-slate-800 font-bold text-sm tracking-wide">พ.ต.อ.ทวี สอดส่อง</p><p className="text-slate-500 text-xs font-light">หัวหน้าพรรคประชาชาติ และอดีตรัฐมนตรีว่าการกระทรวงยุติธรรม</p><p className="text-slate-400 text-[10px] tracking-widest uppercase font-medium pt-4 opacity-50">Designed for Justice © 2025</p></div>
+             <div className="space-y-1">
+                 <p className="font-bold text-slate-900 mt-3 text-lg">พ.ต.อ.ทวี สอดส่อง</p>
+                    <p className="text-xs text-slate-500">หัวหน้าพรรคประชาชาติ และอดีตรัฐมนตรีว่าการกระทรวงยุติธรรม</p>
+                 <div className="pt-4 flex flex-col items-center gap-2">
+                     <button 
+                         onClick={() => setIsTermsOpen(true)}
+                         className="text-[10px] text-amber-600 hover:underline font-bold uppercase tracking-widest cursor-pointer transition-colors"
+                     >
+                         Terms of Use
+                     </button>
+                     <p className="text-slate-400 text-[10px] tracking-widest uppercase font-medium opacity-50">
+                         © {currentYear} Pol.Col. Tawee Sodsong. All rights reserved.
+                     </p>
+                 </div>
+             </div>
           </div>
       </footer>
+      <AnimatePresence>
+        {isTermsOpen && (
+          <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setIsTermsOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-lg p-8 relative z-10 shadow-2xl max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-xl font-bold text-slate-900">ข้อกำหนดการใช้งาน (Terms of Use)</h3>
+                <button onClick={() => setIsTermsOpen(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="space-y-4 text-slate-600 text-sm leading-relaxed font-light">
+                <p className="font-bold text-slate-800">1. วัตถุประสงค์</p>
+                <p>เว็บไซต์นี้เป็นแพลตฟอร์มอย่างเป็นทางการในการนำเสนอผลงาน และนโยบายของ พ.ต.อ.ทวี สอดส่อง เพื่อสร้างความเข้าใจที่ถูกต้องแก่สาธารณชน</p>
+                <p className="font-bold text-slate-800">2. ลิขสิทธิ์และทรัพย์สินทางปัญญา</p>
+                <p>เนื้อหา ภาพถ่าย และวิดีโอทั้งหมดเป็นลิขสิทธิ์ของทีมงาน พ.ต.อ.ทวี สอดส่อง ห้ามนำไปใช้ในเชิงพาณิชย์หรือดัดแปลงโดยไม่ได้รับอนุญาต</p>
+                <p className="font-bold text-slate-800">3. การคุ้มครองข้อมูล</p>
+                <p>ข้อมูลที่แสดงผลเป็นข้อมูล ณ วันที่เผยแพร่ ทีมงานขอสงวนสิทธิ์ในการปรับปรุงเนื้อหาให้สอดคล้องกับสถานการณ์ปัจจุบันโดยไม่ต้องแจ้งให้ทราบล่วงหน้า</p>
+              </div>
+              <button onClick={() => setIsTermsOpen(false)} className="w-full mt-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                รับทราบและปิดหน้าต่าง
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

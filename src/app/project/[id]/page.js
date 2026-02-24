@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState, use, memo } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image"; // 1. Import Image Component
-import { ArrowLeft, Quote, PlayCircle, ArrowRight, FileQuestion, Home, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, Quote, PlayCircle, ArrowRight, FileQuestion, Home, Loader2, Share2, X } from "lucide-react";
 import { Kanit } from "next/font/google";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
@@ -97,7 +97,7 @@ const SkeletonLoader = () => (
 
 const GradientDivider = () => (
     <div className="w-full flex justify-center py-8">
-        <div className="w-3/4 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent opacity-70"></div>
+        <div className="w-3/4 h-px bg-linear-to-r from-transparent via-slate-300 to-transparent opacity-70"></div>
     </div>
 );
 
@@ -206,6 +206,8 @@ const DynamicBlock = memo(({ data }) => {
 // Page Component
 // --------------------------------------------------------
 export default function ProjectDetail({ params }) {
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
   const unwrappedParams = use(params);
   const paramId = unwrappedParams.id;
   const [project, setProject] = useState(null);
@@ -284,7 +286,7 @@ export default function ProjectDetail({ params }) {
                 sizes="100vw"
              />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-white via-transparent to-transparent"></div>
         <div className="absolute bottom-0 w-full p-8 md:p-16 max-w-6xl mx-auto">
             <span className="bg-amber-500 text-white px-3 py-1 text-xs font-bold rounded uppercase mb-4 inline-block shadow-lg">{project.category}</span>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 leading-tight drop-shadow-sm">{project.title}</h1>
@@ -320,10 +322,10 @@ export default function ProjectDetail({ params }) {
                         />
                     </div>
                     <p className="font-bold text-slate-900 mt-3 text-lg">พ.ต.อ.ทวี สอดส่อง</p>
-                    <p className="text-xs text-slate-500">ติดตามผลงานและการขับเคลื่อนนโยบาย</p>
+                    <p className="text-xs text-slate-500">หัวหน้าพรรคประชาชาติ และอดีตรัฐมนตรีว่าการกระทรวงยุติธรรม</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row justify-center gap-4">
+                <div className="flex flex-col md:flex-row justify-center gap-4 mb-10">
                     <Link href="/" className="px-6 py-3 rounded-full border border-slate-300 text-slate-600 font-bold text-sm hover:bg-white hover:border-slate-400 transition-all flex items-center justify-center gap-2 shadow-sm">
                         <ArrowLeft size={16}/> กลับหน้าหลัก
                     </Link>
@@ -332,8 +334,54 @@ export default function ProjectDetail({ params }) {
                         <Share2 size={16}/> แชร์เรื่องราวนี้
                     </button>
                 </div>
+
+                {/* ส่วน Terms & Copyright ย้ายมาอยู่ใต้ปุ่ม  */}
+                <div className="flex flex-col items-center gap-2 pt-0 mt-0">
+                    <button 
+                        onClick={() => setIsTermsOpen(true)}
+                        className="text-[10px] text-amber-600 hover:underline font-bold uppercase tracking-widest cursor-pointer transition-colors"
+                    >
+                        Terms of Use
+                    </button>
+                    <p className="text-slate-400 text-[10px] tracking-widest uppercase font-medium opacity-50">
+                        © {currentYear} Pol.Col. Tawee Sodsong. All rights reserved.
+                    </p>
+                </div>
             </div>
       </div>
-    </div>
+    <AnimatePresence>
+        {isTermsOpen && (
+          <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setIsTermsOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-lg p-8 relative z-10 shadow-2xl max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-xl font-bold text-slate-900">ข้อกำหนดการใช้งาน (Terms of Use)</h3>
+                <button onClick={() => setIsTermsOpen(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="space-y-4 text-slate-600 text-sm leading-relaxed font-light">
+                <p className="font-bold text-slate-800">1. วัตถุประสงค์</p>
+                <p>เว็บไซต์นี้เป็นแพลตฟอร์มอย่างเป็นทางการในการนำเสนอผลงาน และนโยบายของ พ.ต.อ.ทวี สอดส่อง เพื่อสร้างความเข้าใจที่ถูกต้องแก่สาธารณชน</p>
+                <p className="font-bold text-slate-800">2. ลิขสิทธิ์และทรัพย์สินทางปัญญา</p>
+                <p>เนื้อหา ภาพถ่าย และวิดีโอทั้งหมดเป็นลิขสิทธิ์ของทีมงาน พ.ต.อ.ทวี สอดส่อง ห้ามนำไปใช้ในเชิงพาณิชย์หรือดัดแปลงโดยไม่ได้รับอนุญาต</p>
+                <p className="font-bold text-slate-800">3. การคุ้มครองข้อมูล</p>
+                <p>ข้อมูลที่แสดงผลเป็นข้อมูล ณ วันที่เผยแพร่ ทีมงานขอสงวนสิทธิ์ในการปรับปรุงเนื้อหาให้สอดคล้องกับสถานการณ์ปัจจุบันโดยไม่ต้องแจ้งให้ทราบล่วงหน้า</p>
+              </div>
+              <button onClick={() => setIsTermsOpen(false)} className="w-full mt-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                รับทราบและปิดหน้าต่าง
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      </div>
   );
 }
