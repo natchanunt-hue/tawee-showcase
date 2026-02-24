@@ -76,7 +76,7 @@ export default function NineZerosPage() {
               >
                 <div className="flex items-center space-x-4 mb-4">
                   {/* --- [จุดแก้ไขที่ 3] ใช้ตัวแปร iconBgColor แทน item.color.replace --- */}
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${iconBgColor} flex items-center justify-center`}>
+                  <div className={`shrink-0 w-12 h-12 rounded-full ${iconBgColor} flex items-center justify-center`}>
                     <Icon size={24} className={`text-teal-700`} />
                   </div>
                   

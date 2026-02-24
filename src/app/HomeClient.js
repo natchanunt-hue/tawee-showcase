@@ -44,7 +44,7 @@ const ProjectCard = memo(({ item, isEven }) => {
         >
             <div className="w-full md:w-5/12 group cursor-pointer">
                 <Link href={`/project/${item.slug || item.id}`}>
-                    <div className="relative w-full aspect-[16/10] overflow-hidden rounded-2xl shadow-lg border border-slate-100">
+                    <div className="relative w-full aspect-16/10 overflow-hidden rounded-2xl shadow-lg border border-slate-100">
                         {item.image ? (
                             <Image 
                                 src={item.image} 
@@ -129,7 +129,7 @@ const Navbar = memo(() => {
         <motion.nav 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-6 left-0 right-0 z-[100] flex justify-center transition-all duration-500 pointer-events-none ${isMobileMenuOpen ? 'hidden' : ''}`}
+            className={`fixed top-6 left-0 right-0 z-100 flex justify-center transition-all duration-500 pointer-events-none ${isMobileMenuOpen ? 'hidden' : ''}`}
         >
             <div className={`pointer-events-auto flex items-center gap-2 p-2 px-4 rounded-full transition-all duration-500 border border-white/20 backdrop-blur-md shadow-lg ${isScrolled ? 'bg-white/95 text-slate-800 shadow-xl' : 'bg-black/30 text-white hover:bg-black/40'}`}>
                 <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`cursor-pointer font-bold tracking-tight uppercase flex gap-1.5 transition-colors ${isScrolled ? 'text-slate-900' : 'text-white'}`}>
@@ -150,7 +150,7 @@ const Navbar = memo(() => {
         </motion.nav>
         <AnimatePresence>
             {isMobileMenuOpen && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-white flex flex-col items-center justify-center will-change-transform-opacity">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-110 bg-white flex flex-col items-center justify-center will-change-transform-opacity">
                     <button aria-label="Close Menu" onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-slate-100 rounded-full"><X size={24} className="text-slate-800"/></button>
                     <div className="flex flex-col gap-8 text-center">
                         {navLinks.map((link) => ( <button key={link.name} onClick={() => scrollToSection(link.target)} className="text-2xl font-bold text-slate-800 hover:text-amber-600">{link.name}</button> ))}
@@ -169,7 +169,7 @@ const ZeroDetailModal = memo(({ item, onClose }) => {
     const themeBg = item.activeBg || "bg-slate-50";
     const themeBorder = item.activeBorder || "border-slate-200";
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm will-change-transform-opacity" onClick={onClose}></motion.div>
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 50 }} 
@@ -200,8 +200,14 @@ const ZeroDetailModal = memo(({ item, onClose }) => {
                         </ul>
                     </div>
                     {item.details?.graphs && (
-                        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                            <div className="flex items-center gap-2 mb-6"><BarChart3 className="text-slate-400" size={18} /><h4 className="text-sm font-bold uppercase tracking-wider text-slate-600">ตัวชี้วัดความสำเร็จ</h4></div>
+    <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+        <div className="flex items-center gap-2 mb-6">
+            <BarChart3 className="text-slate-400" size={18} />
+            {/* แก้ไขบรรทัดข้างล่างนี้ครับ */}
+            <h4 className="text-sm font-bold uppercase tracking-wider text-slate-600">
+                {item.details.graphTitle || "สถิติจริง และเป้าหมายการแก้ปัญหา"}
+            </h4>
+        </div>
                             <div className="space-y-5">
                                 {item.details.graphs.map((graph, i) => (
                                     <div key={i}>
@@ -250,7 +256,7 @@ const BioSection = memo(() => {
                       </div>
                   </div>
                   <div className="max-w-3xl mx-auto space-y-0 relative pl-4 md:pl-0">
-                      <div className="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2 md:-translate-x-1/2"></div>
+                      <div className="absolute left-5 md:left-1/2 top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2 md:-translate-x-1/2"></div>
                       {bioTimeline.map((item, index) => {
                            const Icon = getIconComponent(item.icon);
                            const isEven = index % 2 === 0;
@@ -337,7 +343,7 @@ export default function HomeClient({ initialProjects }) {
       <Navbar />
       
       {/* 1. HERO SECTION */}
-      <section id="hero" className="relative flex items-center justify-center overflow-hidden min-h-[100dvh]"> 
+      <section id="hero" className="relative flex items-center justify-center overflow-hidden min-h-dvh"> 
         <div className="absolute inset-0 z-0">
             <Image 
                 src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhbz5cKU4VE1GF2TrYueMnNje2npzzw109GnV7MuAX4zq71UEb2EShbQs-HZtMNoQSf51DtgSejfBCxzp8C6XjhaUVmQ0IfYmcsM5_yCqYv5qsTtGjWA7fVZsVr4n04J4vsOZ5Ioig18xgBgDm5W7cXuNCnCiEW2NC5o-EPhcdOkPjb2OPGGnyzYDQoY-W-/s0/bg-main.jpg" 
@@ -346,7 +352,7 @@ export default function HomeClient({ initialProjects }) {
                 priority
                 className="object-cover opacity-25 grayscale" 
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#dedee1]/60 via-transparent to-[#dedee1]"></div>
+            <div className="absolute inset-0 bg-linear-to-b from-[#dedee1]/60 via-transparent to-[#dedee1]"></div>
         </div>
         <div className="relative z-10 w-full h-full flex flex-col-reverse md:flex-row items-center justify-center gap-8 md:gap-12 pt-10 md:pt-0 px-4 sm:px-6 md:px-12 lg:px-16 max-w-6xl mx-auto">
           <div className="flex-1 relative flex flex-col items-center md:items-start justify-center z-20 text-center md:text-left min-w-0">
@@ -366,7 +372,7 @@ export default function HomeClient({ initialProjects }) {
           </div>
           <motion.div initial="hidden" animate="visible" transition={{ duration: 0.8, delay: 0.2 }} variants={{ hidden: { opacity: 0, x: 30 }, visible: { opacity: 1, x: 0 } }} className="flex-1 flex justify-end items-center relative z-30 min-w-0 pr-4 md:pr-0">
              <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="relative w-[260px] sm:w-[320px] md:w-[320px] lg:w-[420px] h-auto shrink-0 will-change-transform-opacity">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] bg-gradient-to-tr from-white to-slate-300 rounded-full blur-3xl opacity-50"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] bg-linear-to-tr from-white to-slate-300 rounded-full blur-3xl opacity-50"></div>
                 <Image src="/images/hero/hero-tawee.png" alt="Tawee" width={420} height={600} priority className="w-full h-auto object-contain drop-shadow-2xl relative z-10" />
              </motion.div>
           </motion.div>
@@ -400,14 +406,14 @@ export default function HomeClient({ initialProjects }) {
       </section>
 
       {/* 3. VISION */}
-      <section id="vision" className="py-24 px-6 md:px-12 relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-[#dedee1]">
+      <section id="vision" className="py-24 px-6 md:px-12 relative overflow-hidden bg-linear-to-b from-white via-slate-50 to-[#dedee1]">
          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-[100px] pointer-events-none"></div>
          <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-amber-100/30 rounded-full blur-[120px] pointer-events-none"></div>
          <div className="max-w-7xl mx-auto relative z-10">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.6 }} className="text-center mb-16">
                 <span className="text-slate-500 font-bold tracking-widest uppercase text-sm">Future Vision</span>
                 <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mt-2 mb-6">วิสัยทัศน์ 9 ศูนย์</h2>
-                <div className="w-16 h-1 bg-gradient-to-r from-teal-400 to-amber-400 mx-auto rounded-full mb-6"></div>
+                <div className="w-16 h-1 bg-linear-to-r from-teal-400 to-amber-400 mx-auto rounded-full mb-6"></div>
                 
                 {/* 🌈 แก้ไขข้อความตกบรรทัดในมือถือ */}
                 <p 
