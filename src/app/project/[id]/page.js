@@ -274,7 +274,7 @@ export default function ProjectDetail({ params }) {
       </nav>
 
       {/* Hero */}
-      <div className="relative h-[70vh] overflow-hidden bg-slate-900">
+      <div className="relative h-[70vh] overflow-hidden bg-[#020202]">
         {/* 6. Parallax: เพิ่ม will-change และใช้ Next Image */}
         <motion.div style={{ y: heroY }} className="absolute inset-0 will-change-transform-opacity">
              <Image 
