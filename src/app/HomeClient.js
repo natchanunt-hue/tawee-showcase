@@ -232,8 +232,9 @@ const ZeroDetailModal = memo(({ item, onClose }) => {
 const BioSection = memo(() => {
     const [isOpen, setIsOpen] = useState(false);
     return (
-      <section id="bio" className="container mx-auto px-4 md:px-8 relative z-40 mb-20 mt-0 md:-mt-20 scroll-mt-24">
-        <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 overflow-hidden max-w-4xl mx-auto">
+      // 🌟 ดันการ์ดลงในมือถือ (mt-16) เพื่อไม่ให้โผล่มากวนสายตาในหน้าแรก
+      <section id="bio" className="container mx-auto px-4 md:px-8 relative z-40 mt-16 md:-mt-12 scroll-mt-24">
+        <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-w-4xl mx-auto">
           <div onClick={() => setIsOpen(!isOpen)} className="p-6 md:p-10 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 transition-colors gap-6 group">
             <div className="flex items-center gap-5 text-center md:text-left w-full md:w-auto">
                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 mx-auto md:mx-0"><UserIcon /></div>
@@ -346,48 +347,89 @@ export default function HomeClient({ initialProjects }) {
     <div className={`min-h-screen bg-[#dedee1] ${kanit.className} text-slate-800 selection:bg-amber-100 selection:text-amber-900`}>
       <Navbar />
       
-      {/* 1. HERO SECTION */}
-      <section id="hero" className="relative flex items-center justify-center overflow-hidden min-h-dvh"> 
-        <div className="absolute inset-0 z-0">
-            <Image 
-                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhbz5cKU4VE1GF2TrYueMnNje2npzzw109GnV7MuAX4zq71UEb2EShbQs-HZtMNoQSf51DtgSejfBCxzp8C6XjhaUVmQ0IfYmcsM5_yCqYv5qsTtGjWA7fVZsVr4n04J4vsOZ5Ioig18xgBgDm5W7cXuNCnCiEW2NC5o-EPhcdOkPjb2OPGGnyzYDQoY-W-/s0/bg-main.jpg" 
-                alt="Background" 
-                fill
-                priority
-                className="object-cover opacity-25 grayscale" 
-            />
-            <div className="absolute inset-0 bg-linear-to-b from-[#dedee1]/60 via-transparent to-[#dedee1]"></div>
-        </div>
-        <div className="relative z-10 w-full h-full flex flex-col-reverse md:flex-row items-center justify-center gap-8 md:gap-12 pt-10 md:pt-0 px-4 sm:px-6 md:px-12 lg:px-16 max-w-6xl mx-auto">
-          <div className="flex-1 relative flex flex-col items-center md:items-start justify-center z-20 text-center md:text-left min-w-0">
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.5, ease: "easeOut" }} className="absolute -top-16 -left-16 md:-top-32 md:-left-12 w-[80vw] max-w-[400px] md:max-w-[600px] h-auto z-0 opacity-10 pointer-events-none">
-                <img src="/images/hero/quote-shape.png" alt="Quote" className="w-full h-full object-contain transform -rotate-12" />
-            </motion.div>
-            <motion.div initial="hidden" animate="visible" transition={{ duration: 0.8 }} variants={{ hidden: { opacity: 0, x: -30 }, visible: { opacity: 1, x: 0 } }} className="relative z-10 w-full flex flex-col items-center md:items-start">
-                <div className="mb-7 md:mb-10 w-[300px] md:w-[380px] lg:w-[480px] shrink-0">
-                    <img src="/images/hero/Name-sign.png" alt="Tawee Sodsong" className="w-full h-auto object-contain drop-shadow-sm" />
-                </div>
-                <motion.div initial={{ opacity: 0, y: 20, filter: "blur(5px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.8, delay: 0.3 }} className="max-w-md px-2 md:px-0 md:pl-6 border-l-0 md:border-l-4 border-amber-600">
-                    <blockquote className="text-base md:text-xl text-slate-700 font-medium italic leading-relaxed">
-                        "พหุวัฒนธรรมคือ<span className="text-amber-700 font-bold">ความเสมอภาค...</span> <br/> ไม่ว่าคนเชื้อชาติไหน ศาสนาใด <br/> ต้องมีที่ยืนและมี<span className="text-amber-700 font-bold">ศักดิ์ศรีเท่าเทียมกัน</span>"
-                    </blockquote>
-                </motion.div>
+      {/* 🌟 โซนพื้นหลังมืด (Hero + Bio ซ้อนกันอยู่) เข้มสุดๆ ด้วยสีดำ #020202 */}
+      <div className="relative w-full bg-[#020202] pb-16 md:pb-24">
+        
+        {/* 1. HERO SECTION (Immersive Full Screen) */}
+        {/* บังคับ min-h-[100dvh] เพื่อดัน BioSection ให้ตกขอบจอพอดี 100% ในมือถือ */}
+        <section id="hero" className="relative flex flex-col md:block overflow-hidden min-h-dvh"> 
+          
+          {/* --- A. ภาพพื้นหลังสำหรับ Desktop (จอใหญ่) --- */}
+          <div className="hidden md:block absolute inset-0 z-0">
+              <Image 
+                  src="/images/hero/bg-hero.jpg" 
+                  alt="Background" 
+                  fill
+                  priority
+                  quality={100}
+                  // 🌟 ขยับภาพขึ้นนิดนึงโดยแก้พิกัด Y จาก center เป็น 60% (ดันจุดโฟกัสลง ทำให้ภาพขยับขึ้น)
+                  className="object-cover object-[80%_60%] opacity-100" 
+              />
+              {/* Gradient 1 (ซ้ายไปขวา) */}
+              <div className="absolute inset-0 bg-linear-to-r from-[#020202] via-[#020202]/60 to-transparent"></div>
+              
+              {/* Gradient 2 (ล่างขึ้นบน) */}
+              <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-[#020202] to-transparent"></div>
+          </div>
+
+          {/* --- B. ภาพพื้นหลังสำหรับ Mobile (จอมือถือ - แบ่งครึ่งบน) --- */}
+          {/* 🌟 ซูมภาพ 115% ดึงไปทางขวาเพื่อลดพื้นที่มืดฝั่งซ้าย และทำให้ท่านทวีใหญ่ขึ้น */}
+          <div className="relative w-full h-[55vh] md:hidden z-0 overflow-hidden">
+              <Image 
+                  src="/images/hero/bg-hero.jpg" 
+                  alt="Background" 
+                  fill
+                  priority
+                  className="object-cover object-[85%_20%] scale-[1.15] origin-right opacity-100" 
+              />
+              {/* ไล่สีดำเฉพาะขอบล่างของภาพ เพื่อเชื่อมกับพื้นดำของตัวหนังสือให้เนียนตา */}
+              <div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-[#020202] via-[#020202]/90 to-transparent"></div>
+          </div>
+
+          {/* --- C. กล่องเนื้อหาข้อความ --- */}
+          {/* บังคับ min-h-[100dvh] ในโหมดคอมเพื่อให้จัดให้อยู่ตรงกลางได้พอดี */}
+          <div className="relative z-10 w-full px-6 md:px-12 lg:px-24 max-w-[1600px] mx-auto flex-1 flex flex-col justify-center pb-12 md:pb-0 md:min-h-dvh">
+            <motion.div 
+              initial="hidden" 
+              animate="visible" 
+              transition={{ duration: 1, ease: "easeOut" }} 
+              variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }} 
+              // 🌟 md:mt-32 ดันข้อความลงมาด้านล่างในหน้าจอคอม
+              className="max-w-full sm:max-w-xl md:max-w-xl lg:max-w-2xl flex flex-col items-start md:mt-32"
+            >
+              {/* Name Sign - 🌟 ย่อขนาดลงใน PC เพื่อให้ภาพเด่นขึ้น ไม่แย่งซีน */}
+              <div className="mb-6 md:mb-8 w-60 sm:w-[280px] md:w-[340px] lg:w-[400px] xl:w-[460px] shrink-0">
+                  <img 
+                    src="/images/hero/name-sign.png" 
+                    alt="Tawee Sodsong" 
+                    className="w-full h-auto object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]" 
+                  />
+              </div>
+
+              {/* Quote Block - 🌟 ย่อขนาด Text ลงใน PC */}
+              <motion.div 
+                initial={{ opacity: 0, filter: "blur(5px)" }} 
+                animate={{ opacity: 1, filter: "blur(0px)" }} 
+                transition={{ duration: 1, delay: 0.4 }} 
+                className="pl-4 md:pl-5 border-l-2 md:border-l-4 border-amber-500"
+              >
+                  <blockquote className="text-[17px] sm:text-lg md:text-[20px] lg:text-[24px] text-slate-100 font-medium italic leading-relaxed drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+                      "พหุวัฒนธรรมคือ<span className="text-amber-400 font-bold">ความเสมอภาค...</span> <br /> 
+                      ไม่ว่าคนเชื้อชาติไหน ศาสนาใด <br /> 
+                      ต้องมีที่ยืนและมี<span className="text-amber-400 font-bold">ศักดิ์ศรีเท่าเทียมกัน</span>"
+                  </blockquote>
+              </motion.div>
             </motion.div>
           </div>
-          <motion.div initial="hidden" animate="visible" transition={{ duration: 0.8, delay: 0.2 }} variants={{ hidden: { opacity: 0, x: 30 }, visible: { opacity: 1, x: 0 } }} className="flex-1 flex justify-end items-center relative z-30 min-w-0 pr-4 md:pr-0">
-             <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="relative w-[260px] sm:w-[320px] md:w-[320px] lg:w-[420px] h-auto shrink-0 will-change-transform-opacity">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] bg-linear-to-tr from-white to-slate-300 rounded-full blur-3xl opacity-50"></div>
-                <Image src="/images/hero/hero-tawee.png" alt="Tawee" width={420} height={600} priority className="w-full h-auto object-contain drop-shadow-2xl relative z-10" />
-             </motion.div>
-          </motion.div>
-        </div>
-      </section>
+        </section>
 
-      {/* Bio Section */}
-      <BioSection />
+        {/* Bio Section */}
+        <BioSection />
+        
+      </div>
 
       {/* 2. PROJECTS SECTION */}
-      <section id="projects" className="py-20 px-6 md:px-12 bg-white relative z-10 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.05)] scroll-mt-20">
+      <section id="projects" className="py-20 px-6 md:px-12 bg-white relative z-10 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] scroll-mt-20 -mt-10 md:-mt-16">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16"><span className="text-amber-600 font-bold tracking-[0.2em] uppercase text-xs mb-3 block">Key Missions</span><h2 className="text-3xl md:text-5xl font-bold text-slate-900">ภารกิจเพื่อประชาชน</h2></div>
           
