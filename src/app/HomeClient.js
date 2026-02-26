@@ -229,12 +229,52 @@ const ZeroDetailModal = memo(({ item, onClose }) => {
     );
 });
 
+// --- Modal สำหรับแสดงข้อมูล Bio Timeline (ตัวใหม่) ---
+const BioTimelineModal = memo(({ item, onClose }) => {
+    if (!item) return null;
+    const Icon = getIconComponent(item.icon);
+    return (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></motion.div>
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 50 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.95, y: 50 }}
+                transition={{ type: "spring", damping: 20, stiffness: 150 }}
+                className="bg-white rounded-3xl w-full max-w-lg overflow-hidden relative z-10 shadow-2xl flex flex-col will-change-transform-opacity"
+            >
+                {/* ส่วนหัว Modal */}
+                <div className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 flex justify-between items-start">
+                   <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm text-amber-500 border border-slate-100">
+                           <Icon size={24} />
+                       </div>
+                       <div>
+                           <div className="text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">{item.year}</div>
+                           <h3 className="text-lg font-bold text-slate-800 leading-tight">{item.role}</h3>
+                       </div>
+                   </div>
+                   <button onClick={onClose} className="p-2 bg-white hover:bg-slate-100 rounded-full transition-colors shadow-sm border border-slate-100"><CloseIcon size={18} className="text-slate-400"/></button>
+                </div>
+                {/* ส่วนเนื้อหา Modal */}
+                <div className="p-6 md:p-8 overflow-y-auto max-h-[60vh]">
+                    <p className="text-slate-600 leading-relaxed font-light whitespace-pre-line text-sm md:text-base">
+                        {item.fullDesc}
+                    </p>
+                </div>
+            </motion.div>
+        </div>
+    );
+});
+
 const BioSection = memo(() => {
     const [isOpen, setIsOpen] = useState(false);
+    const [selectedTimeline, setSelectedTimeline] = useState(null); // เพิ่ม State ควบคุม Popup
+
     return (
-      // 🌟 ดันการ์ดลงในมือถือ (mt-16) เพื่อไม่ให้โผล่มากวนสายตาในหน้าแรก
       <section id="bio" className="container mx-auto px-4 md:px-8 relative z-40 mt-16 md:-mt-12 scroll-mt-24">
         <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-w-4xl mx-auto">
+          
           <div onClick={() => setIsOpen(!isOpen)} className="p-6 md:p-10 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 transition-colors gap-6 group">
             <div className="flex items-center gap-5 text-center md:text-left w-full md:w-auto">
                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 mx-auto md:mx-0"><UserIcon /></div>
@@ -243,6 +283,7 @@ const BioSection = memo(() => {
             <div className={`hidden md:flex w-10 h-10 rounded-full border items-center justify-center transition-all ${isOpen ? 'bg-amber-500 border-amber-500 text-white rotate-180' : 'border-slate-200 text-slate-400 group-hover:border-amber-500 group-hover:text-amber-500'}`}><ChevronDown size={20}/></div>
             <div className={`md:hidden w-full py-2 flex items-center justify-center gap-2 text-sm font-medium rounded-xl transition-colors ${isOpen ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-500'}`}>{isOpen ? 'ซ่อนประวัติ' : 'ดูเส้นทางชีวิต'} <ChevronDown size={16} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}/></div>
           </div>
+
           <AnimatePresence>
             {isOpen && (
               <motion.div initial={{ maxHeight: 0, opacity: 0 }} animate={{ maxHeight: 2000, opacity: 1 }} exit={{ maxHeight: 0, opacity: 0 }} transition={{ duration: 0.5, ease: "circOut" }}>
@@ -256,16 +297,30 @@ const BioSection = memo(() => {
                           <p className="text-slate-800 font-bold text-base md:text-xl tracking-wide leading-relaxed whitespace-pre-line relative z-10 text-left pl-2">{bioIntro.careerHighlight}</p>
                       </div>
                   </div>
+                  
+                  {/* Timeline */}
                   <div className="max-w-3xl mx-auto space-y-0 relative pl-4 md:pl-0">
                       <div className="absolute left-5 md:left-1/2 top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2 md:-translate-x-1/2"></div>
                       {bioTimeline.map((item, index) => {
                            const Icon = getIconComponent(item.icon);
                            const isEven = index % 2 === 0;
                            return (
-                              <div key={index} className={`relative flex flex-col md:flex-row items-start md:items-center w-full mb-12 last:mb-0 ${isEven ? 'md:flex-row-reverse' : ''}`}>
-                                  <div className="absolute left-[5px] md:left-1/2 w-10 h-10 rounded-full bg-white border-4 border-amber-100 flex items-center justify-center z-10 -translate-x-1/2 md:-translate-x-1/2 shadow-sm text-amber-400"><Icon size={16} /></div>
+                              <div key={index} className={`relative flex flex-col md:flex-row items-start md:items-center w-full mb-10 last:mb-0 ${isEven ? 'md:flex-row-reverse' : ''}`}>
+                                  <div className="absolute left-[5px] md:left-1/2 w-10 h-10 rounded-full bg-white border-4 border-amber-100 flex items-center justify-center z-10 -translate-x-1/2 md:-translate-x-1/2 shadow-sm text-amber-500"><Icon size={16} /></div>
                                   <div className="w-full md:w-1/2"></div>
-                                  <div className={`w-full md:w-1/2 pl-16 md:pl-0 ${isEven ? 'md:pr-16 md:text-right' : 'md:pl-16'}`}><span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded mb-2 inline-block">{item.year}</span><h5 className="font-bold text-lg text-slate-800 mb-2">{item.role}</h5><p className="text-sm text-slate-500 font-light leading-relaxed">{item.desc}</p></div>
+                                  <div className={`w-full md:w-1/2 pl-16 md:pl-0 ${isEven ? 'md:pr-16 md:text-right' : 'md:pl-16'}`}>
+                                      <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded mb-2 inline-block border border-amber-100">{item.year}</span>
+                                      <h5 className="font-bold text-lg text-slate-800 mb-1">{item.role}</h5>
+                                      <p className="text-sm text-slate-500 font-light leading-relaxed mb-3">{item.desc}</p>
+                                      
+                                      {/* ปุ่มกดอ่านเพิ่มเติม เปิด Popup */}
+                                      <button 
+                                        onClick={() => setSelectedTimeline(item)} 
+                                        className="text-[11px] font-bold text-slate-400 hover:text-amber-600 border border-slate-200 hover:border-amber-300 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-full transition-all inline-flex items-center gap-1 shadow-sm"
+                                      >
+                                          อ่านเพิ่มเติม <ArrowRight size={10} />
+                                      </button>
+                                  </div>
                               </div>
                            )
                       })}
@@ -275,6 +330,12 @@ const BioSection = memo(() => {
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* 🌟 แสดง Popup เมื่อมีการคลิก */}
+        <AnimatePresence>
+            {selectedTimeline && <BioTimelineModal item={selectedTimeline} onClose={() => setSelectedTimeline(null)} />}
+        </AnimatePresence>
+
       </section>
     );
 });
@@ -458,7 +519,7 @@ export default function HomeClient({ initialProjects }) {
          <div className="max-w-7xl mx-auto relative z-10">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.6 }} className="text-center mb-16">
                 <span className="text-slate-500 font-bold tracking-widest uppercase text-sm">Future Vision</span>
-                <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mt-2 mb-6">วิสัยทัศน์ 9 ศูนย์</h2>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mt-2 mb-6">วิสัยทัศน์</h2>
                 <div className="w-16 h-1 bg-linear-to-r from-teal-400 to-amber-400 mx-auto rounded-full mb-6"></div>
                 
                 {/* 🌈 แก้ไขข้อความตกบรรทัดในมือถือ */}
